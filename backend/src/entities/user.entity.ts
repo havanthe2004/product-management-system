@@ -6,6 +6,7 @@ import {
 } from "typeorm";
 
 import { Product } from "./product.entity";
+import { RefreshToken } from "./refresh-token.entity";
 import { UserRole } from "../common/enums/user-role.enum";
 
 @Entity("users")
@@ -54,5 +55,8 @@ export class User {
 
     @OneToMany(() => Product, product => product.approvedBy)
     approvedProducts: Product[];
+
+    @OneToMany(() => RefreshToken, refreshToken => refreshToken.user)
+    refreshTokens: RefreshToken[];
 
 }

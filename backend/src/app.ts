@@ -17,13 +17,13 @@ app.get("/health", (req, res) => {
     res.json({
         status: "UP",
         timestamp: new Date(),
-        message: "Server is running smoothly"
+        message: "Máy chủ đang hoạt động ổn định"
     });
 });
 
 // Basic API route
 app.get("/", (req, res) => {
-    res.send("Welcome to the Products Management System API!");
+    res.send("Chào mừng đến với API Hệ thống Quản lý Sản phẩm!");
 });
 
 export default app;
