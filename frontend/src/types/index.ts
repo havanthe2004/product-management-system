@@ -30,6 +30,12 @@ export interface User {
 export interface LoginResponse {
   user: User;
   accessToken: string;
+  refreshToken: string;
+}
+
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
 }
 
 export interface CommodityGroup {

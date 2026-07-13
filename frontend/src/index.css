@@ -119,11 +119,14 @@ a {
 .app-container {
   display: flex;
   width: 100vw;
-  min-height: 100vh;
+  height: 100vh;
+  overflow: hidden;
 }
 
 .sidebar {
   width: 280px;
+  height: 100vh;
+  box-sizing: border-box;
   background-color: var(--bg-sidebar);
   border-right: 1px solid var(--border-color);
   display: flex;

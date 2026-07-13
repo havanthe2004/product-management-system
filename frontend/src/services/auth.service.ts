@@ -1,5 +1,12 @@
+import axios from 'axios';
 import api from './api';
-import type { BaseResponse, LoginResponse } from '../types';
+import type { BaseResponse, LoginResponse, RefreshTokenResponse } from '../types';
+
+export async function refreshToken(token: string): Promise<BaseResponse<RefreshTokenResponse>> {
+  const baseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+  const res = await axios.post<BaseResponse<RefreshTokenResponse>>(`${baseUrl}/auth/refresh`, { refreshToken: token });
+  return res.data;
+}
 
 export async function login(email: string, password: string): Promise<BaseResponse<LoginResponse>> {
   const res = await api.post<BaseResponse<LoginResponse>>('/auth/login', { email, password });

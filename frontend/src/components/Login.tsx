@@ -36,7 +36,8 @@ export default function Login() {
 
       dispatch(loginSuccess({
         user: json.data.user,
-        token: json.data.accessToken
+        token: json.data.accessToken,
+        refreshToken: json.data.refreshToken
       }));
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Đăng nhập thất bại.');

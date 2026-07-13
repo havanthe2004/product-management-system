@@ -135,6 +135,27 @@ export class AuthController {
             );
         }
     }
+
+    /**
+     * Handle request to refresh access token using refresh token
+     */
+    async refreshToken(req: Request, res: Response): Promise<Response> {
+        try {
+            const result = await authService.refreshToken(req.body);
+            return ResponseHelper.success(
+                res,
+                result,
+                "Lấy mã xác thực mới thành công!"
+            );
+        } catch (error: any) {
+            return ResponseHelper.error(
+                res,
+                error.message,
+                null,
+                401
+            );
+        }
+    }
 }
 
 export const authController = new AuthController();

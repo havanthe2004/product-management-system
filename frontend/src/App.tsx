@@ -43,14 +43,12 @@ function App() {
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        isDark={isDark}
-        setIsDark={setIsDark}
       />
 
       {/* Main Content Area */}
       <main className="main-content">
         {/* Header Component */}
-        <Header activeTab={activeTab} />
+        <Header activeTab={activeTab} isDark={isDark} setIsDark={setIsDark} />
 
         {/* Content Body */}
         <div className="content-body" style={{ overflowY: 'auto' }}>

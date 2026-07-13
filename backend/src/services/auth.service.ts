@@ -208,5 +208,72 @@ export class AuthService {
             message: "Đặt lại mật khẩu thành công!"
         };
     }
+
+    /**
+     * Verify refresh token and issue new token pair
+     */
+    async refreshToken(dto: { refreshToken: string }): Promise<{ accessToken: string; refreshToken: string }> {
+        const { refreshToken } = dto;
+        if (!refreshToken) {
+            throw new Error("Vui lòng cung cấp mã Refresh Token.");
+        }
+
+        // 1. Verify token signature
+        let decoded: any;
+        try {
+            decoded = jwt.verify(refreshToken, this.JWT_SECRET);
+        } catch (error) {
+            throw new Error("Refresh Token không hợp lệ hoặc đã hết hạn.");
+        }
+
+        // 2. Find token in database
+        const savedToken = await this.refreshTokenRepository.findOne({
+            where: { token: refreshToken },
+            relations: { user: true }
+        });
+
+        if (!savedToken || savedToken.isRevoked || new Date() > savedToken.expiresAt) {
+            throw new Error("Refresh Token đã hết hạn hoặc không còn hiệu lực.");
+        }
+
+        const user = savedToken.user;
+        if (!user || user.status !== UserStatus.ACTIVE) {
+            throw new Error("Tài khoản người dùng đã bị khóa hoặc không tồn tại.");
+        }
+
+        // 3. Revoke the old refresh token
+        savedToken.isRevoked = true;
+        await this.refreshTokenRepository.save(savedToken);
+
+        // 4. Generate new tokens
+        const accessToken = jwt.sign(
+            { id: user.id, email: user.email, role: user.role || "OFFICER" },
+            this.JWT_SECRET,
+            { expiresIn: this.JWT_ACCESS_EXPIRATION }
+        );
+
+        const newRefreshTokenVal = jwt.sign(
+            { id: user.id },
+            this.JWT_SECRET,
+            { expiresIn: this.JWT_REFRESH_EXPIRATION }
+        );
+
+        // 5. Save the new refresh token
+        const expiresAt = new Date();
+        expiresAt.setDate(expiresAt.getDate() + 7);
+
+        const newRefreshTokenEntity = new RefreshToken();
+        newRefreshTokenEntity.token = newRefreshTokenVal;
+        newRefreshTokenEntity.user = user;
+        newRefreshTokenEntity.expiresAt = expiresAt;
+        newRefreshTokenEntity.isRevoked = false;
+
+        await this.refreshTokenRepository.save(newRefreshTokenEntity);
+
+        return {
+            accessToken,
+            refreshToken: newRefreshTokenVal
+        };
+    }
 }
 export const authService = new AuthService();

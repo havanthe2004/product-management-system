@@ -22,7 +22,7 @@ const authSlice = createSlice({
   name: 'auth',
   initialState,
   reducers: {
-    loginSuccess: (state, action: PayloadAction<{ user: User; token: string }>) => {
+    loginSuccess: (state, action: PayloadAction<{ user: User; token: string; refreshToken: string }>) => {
       const mappedUser = {
         ...action.payload.user,
         username: action.payload.user.email
@@ -32,6 +32,7 @@ const authSlice = createSlice({
       state.isAuthenticated = true;
       localStorage.setItem('user', JSON.stringify(mappedUser));
       localStorage.setItem('token', action.payload.token);
+      localStorage.setItem('refreshToken', action.payload.refreshToken);
     },
     logout: (state) => {
       state.user = null;
@@ -39,6 +40,7 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       localStorage.removeItem('user');
       localStorage.removeItem('token');
+      localStorage.removeItem('refreshToken');
     },
     switchRole: (state, action: PayloadAction<UserRole>) => {
       if (state.user) {
