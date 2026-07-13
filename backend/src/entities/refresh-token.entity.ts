@@ -12,7 +12,7 @@ import { User } from "./user.entity";
 @Entity("refresh_tokens")
 export class RefreshToken {
 
-    @PrimaryGeneratedColumn()
+    @PrimaryGeneratedColumn({ type: "bigint" })
     id: number;
 
     @Column({

@@ -2,67 +2,45 @@ import {
     Entity,
     PrimaryGeneratedColumn,
     Column,
-    ManyToOne,
-    JoinColumn,
     CreateDateColumn,
     UpdateDateColumn,
     DeleteDateColumn,
 } from "typeorm";
-import { Role } from "./role.entity";
-import { UserStatus } from "../common/enums/user-status.enum";
+import { CommodityStatus } from "../common/enums/commodity-status.enum";
 
-@Entity("users")
-export class User {
+@Entity("quality_standards")
+export class QualityStandard {
 
     @PrimaryGeneratedColumn({ type: "bigint" })
     id: number;
 
-    @ManyToOne(() => Role)
-    @JoinColumn({
-        name: "role_id",
-    })
-    role: Role;
-
     @Column({
-        name: "full_name",
+        name: "standard_code",
         type: "varchar",
-        length: 255,
-    })
-    fullName: string;
-
-    @Column({
-        type: "varchar",
-        length: 255,
+        length: 30,
         unique: true,
     })
-    email: string;
+    standardCode: string;
 
     @Column({
+        name: "standard_name",
         type: "varchar",
         length: 255,
     })
-    password: string;
+    standardName: string;
 
     @Column({
-        type: "varchar",
-        length: 20,
+        type: "text",
         nullable: true,
     })
-    phone: string;
-
-    @Column({
-        type: "varchar",
-        length: 500,
-        nullable: true,
-    })
-    avatar: string;
+    description: string;
 
     @Column({
         type: "enum",
-        enum: UserStatus,
-        default: UserStatus.ACTIVE,
+        enum: CommodityStatus,
+        default: CommodityStatus.ACTIVE,
     })
-    status: UserStatus;
+    status: CommodityStatus;
 
     @CreateDateColumn({
         name: "created_at",

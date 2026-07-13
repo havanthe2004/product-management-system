@@ -8,61 +8,48 @@ import {
     UpdateDateColumn,
     DeleteDateColumn,
 } from "typeorm";
-import { Role } from "./role.entity";
-import { UserStatus } from "../common/enums/user-status.enum";
+import { CommodityGroup } from "./commodity-group.entity";
+import { CommodityStatus } from "../common/enums/commodity-status.enum";
 
-@Entity("users")
-export class User {
+@Entity("commodity_types")
+export class CommodityType {
 
     @PrimaryGeneratedColumn({ type: "bigint" })
     id: number;
 
-    @ManyToOne(() => Role)
+    @ManyToOne(() => CommodityGroup)
     @JoinColumn({
-        name: "role_id",
+        name: "group_id",
     })
-    role: Role;
+    group: CommodityGroup;
 
     @Column({
-        name: "full_name",
-        type: "varchar",
-        length: 255,
-    })
-    fullName: string;
-
-    @Column({
-        type: "varchar",
-        length: 255,
-        unique: true,
-    })
-    email: string;
-
-    @Column({
-        type: "varchar",
-        length: 255,
-    })
-    password: string;
-
-    @Column({
+        name: "type_code",
         type: "varchar",
         length: 20,
-        nullable: true,
+        unique: true,
     })
-    phone: string;
+    typeCode: string;
 
     @Column({
+        name: "type_name",
         type: "varchar",
-        length: 500,
+        length: 255,
+    })
+    typeName: string;
+
+    @Column({
+        type: "text",
         nullable: true,
     })
-    avatar: string;
+    description: string;
 
     @Column({
         type: "enum",
-        enum: UserStatus,
-        default: UserStatus.ACTIVE,
+        enum: CommodityStatus,
+        default: CommodityStatus.ACTIVE,
     })
-    status: UserStatus;
+    status: CommodityStatus;
 
     @CreateDateColumn({
         name: "created_at",

@@ -7,11 +7,11 @@ export enum UserRole {
 
 export interface User {
   id: number;
-  username: string;
-  fullName: string;
   email: string;
+  fullName: string;
   role: UserRole;
   isActive: boolean;
+  username?: string;
 }
 
 interface AuthState {
@@ -20,17 +20,13 @@ interface AuthState {
   token: string | null;
 }
 
+const savedUser = localStorage.getItem('user');
+const savedToken = localStorage.getItem('token');
+
 const initialState: AuthState = {
-  user: {
-    id: 1,
-    username: 'officer01',
-    fullName: 'Nguyen Van A',
-    email: 'officer01@example.com',
-    role: UserRole.OFFICER,
-    isActive: true,
-  },
-  isAuthenticated: true,
-  token: 'mock-jwt-token',
+  user: savedUser ? JSON.parse(savedUser) : null,
+  isAuthenticated: !!savedToken,
+  token: savedToken || null,
 };
 
 const authSlice = createSlice({
@@ -38,14 +34,22 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     loginSuccess: (state, action: PayloadAction<{ user: User; token: string }>) => {
-      state.user = action.payload.user;
+      const mappedUser = {
+        ...action.payload.user,
+        username: action.payload.user.email
+      };
+      state.user = mappedUser;
       state.token = action.payload.token;
       state.isAuthenticated = true;
+      localStorage.setItem('user', JSON.stringify(mappedUser));
+      localStorage.setItem('token', action.payload.token);
     },
     logout: (state) => {
       state.user = null;
       state.token = null;
       state.isAuthenticated = false;
+      localStorage.removeItem('user');
+      localStorage.removeItem('token');
     },
     switchRole: (state, action: PayloadAction<UserRole>) => {
       if (state.user) {

@@ -2,27 +2,66 @@ import {
     Entity,
     PrimaryGeneratedColumn,
     Column,
+    CreateDateColumn,
+    UpdateDateColumn,
+    DeleteDateColumn,
 } from "typeorm";
+import { CommodityStatus } from "../common/enums/commodity-status.enum";
 
 @Entity("units")
 export class Unit {
 
-    @PrimaryGeneratedColumn()
+    @PrimaryGeneratedColumn({ type: "bigint" })
     id: number;
 
     @Column({
-        length: 50,
+        name: "unit_code",
+        type: "varchar",
+        length: 20,
+        nullable: true,
     })
-    name: string;
+    unitCode: string;
 
     @Column({
+        name: "unit_name",
+        type: "varchar",
+        length: 100,
+    })
+    unitName: string;
+
+    @Column({
+        type: "varchar",
         length: 20,
     })
     symbol: string;
 
     @Column({
-        default: true,
+        type: "text",
+        nullable: true,
     })
-    isActive: boolean;
+    description: string;
+
+    @Column({
+        type: "enum",
+        enum: CommodityStatus,
+        default: CommodityStatus.ACTIVE,
+    })
+    status: CommodityStatus;
+
+    @CreateDateColumn({
+        name: "created_at",
+    })
+    createdAt: Date;
+
+    @UpdateDateColumn({
+        name: "updated_at",
+    })
+    updatedAt: Date;
+
+    @DeleteDateColumn({
+        name: "deleted_at",
+        nullable: true,
+    })
+    deletedAt: Date;
 
 }
