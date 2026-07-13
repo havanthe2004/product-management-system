@@ -3,8 +3,6 @@ import { authController } from "../controllers/auth.controller";
 
 const router = Router();
 
-// POST /api/auth/register
-router.post("/register", authController.register.bind(authController));
 
 // POST /api/auth/login
 router.post("/login", authController.login.bind(authController));

@@ -1,18 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
-export enum UserRole {
-  ADMIN = 'ADMIN',
-  OFFICER = 'OFFICER',
-}
-
-export interface User {
-  id: number;
-  email: string;
-  fullName: string;
-  role: UserRole;
-  isActive: boolean;
-  username?: string;
-}
+import { type User, UserRole } from '../../types';
+export { UserRole };
 
 interface AuthState {
   user: User | null;
@@ -54,8 +43,8 @@ const authSlice = createSlice({
     switchRole: (state, action: PayloadAction<UserRole>) => {
       if (state.user) {
         state.user.role = action.payload;
-        state.user.fullName = action.payload === UserRole.ADMIN ? 'Quản trị viên' : 'Nguyen Van A';
-        state.user.username = action.payload === UserRole.ADMIN ? 'admin01' : 'officer01';
+        state.user.fullName = action.payload === UserRole.ADMIN ? 'Quản trị viên' : action.payload === UserRole.MANAGER ? 'Quản lý' : 'Nguyen Van A';
+        state.user.username = action.payload === UserRole.ADMIN ? 'admin01' : action.payload === UserRole.MANAGER ? 'manager01' : 'officer01';
       }
     }
   },

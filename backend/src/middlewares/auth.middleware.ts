@@ -40,8 +40,7 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
 
         const userRepository = AppDataSource.getRepository(User);
         const user = await userRepository.findOne({
-            where: { id: decoded.id },
-            relations: { role: true }
+            where: { id: decoded.id }
         });
 
         if (!user) {
@@ -55,9 +54,8 @@ export const authMiddleware = async (req: AuthenticatedRequest, res: Response, n
         req.user = {
             id: Number(user.id),
             email: user.email,
-            role: user.role?.roleName
+            role: user.role
         };
-        console.log(user)
         next();
     } catch (error: any) {
         return ResponseHelper.error(res, error.message, null, 500);

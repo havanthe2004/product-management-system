@@ -3,6 +3,9 @@ export interface RegisterReqDto {
     password: string;
     confirmPassword?: string;
     fullName: string;
+    idCardNumber: string;
+    dateOfBirth: Date;
+    gender: string;
 }
 
 export interface LoginReqDto {

@@ -1,21 +1,38 @@
 import { Request, Response } from "express";
-import { AppDataSource } from "../config/data-source";
-import { User } from "../entities/user.entity";
-import { Role } from "../entities/role.entity";
+import { userService } from "../services/user.service";
 import { ResponseHelper } from "../utils/response.helper";
 import { AuditLogService } from "../services/audit-log.service";
 
 export class UserController {
-    private userRepository = AppDataSource.getRepository(User);
-    private roleRepository = AppDataSource.getRepository(Role);
+
+    async create(req: Request, res: Response): Promise<Response> {
+        try {
+            const saved = await userService.create(req.body);
+
+            // Audit log
+            await AuditLogService.log(req, {
+                module: "QUẢN LÝ THÀNH VIÊN",
+                action: "TẠO MỚI",
+                description: `Tạo tài khoản mới thành công: ${saved.email}`,
+                newData: { email: saved.email, role: saved.role }
+            });
+
+            return ResponseHelper.success(res, {
+                id: saved.id,
+                email: saved.email,
+                fullName: saved.fullName,
+                role: saved.role,
+                status: saved.status
+            }, "Tạo thành viên thành công!", 201);
+        } catch (error: any) {
+            return ResponseHelper.error(res, error.message, null, 400);
+        }
+    }
 
     async getAll(req: Request, res: Response): Promise<Response> {
         try {
-            const list = await this.userRepository.find({
-                relations: { role: true },
-                order: { createdAt: "DESC" }
-            });
-            
+            const list = await userService.getAll();
+
             // Map list to omit password
             const mappedList = list.map(u => ({
                 id: u.id,
@@ -24,7 +41,9 @@ export class UserController {
                 phone: u.phone,
                 avatar: u.avatar,
                 status: u.status,
-                role: u.role?.roleName || "OFFICER",
+                role: u.role,
+                dateOfBirth: u.dateOfBirth,
+                gender: u.gender,
                 createdAt: u.createdAt
             }));
 
@@ -37,36 +56,17 @@ export class UserController {
     async updateRole(req: Request, res: Response): Promise<Response> {
         try {
             const id = Number(req.params.id);
-            const { roleName } = req.body; // "ADMIN" or "OFFICER"
-            if (!roleName) {
-                throw new Error("Tên vai trò là bắt buộc.");
-            }
+            const { roleName } = req.body;
 
-            const user = await this.userRepository.findOne({ where: { id }, relations: { role: true } });
-            if (!user) {
-                throw new Error("Không tìm thấy thành viên.");
-            }
-
-            const oldData = { email: user.email, role: user.role?.roleName };
-
-            let role = await this.roleRepository.findOne({ where: { roleName } });
-            if (!role) {
-                role = new Role();
-                role.roleName = roleName;
-                role.description = `${roleName} role`;
-                await this.roleRepository.save(role);
-            }
-
-            user.role = role;
-            const saved = await this.userRepository.save(user);
+            const { saved, oldData } = await userService.updateRole(id, roleName);
 
             // Audit log
             await AuditLogService.log(req, {
                 module: "QUẢN LÝ THÀNH VIÊN",
                 action: "CẬP NHẬT VAI TRÒ",
-                description: `Cập nhật vai trò người dùng thành công: ${user.email} sang ${roleName}`,
+                description: `Cập nhật vai trò người dùng thành công: ${saved.email} sang ${roleName}`,
                 oldData,
-                newData: { email: user.email, role: roleName }
+                newData: { email: saved.email, role: roleName }
             });
 
             return ResponseHelper.success(res, {
@@ -84,32 +84,24 @@ export class UserController {
     async toggleStatus(req: Request, res: Response): Promise<Response> {
         try {
             const id = Number(req.params.id);
-            const { status } = req.body; // "ACTIVE" or "LOCKED"
+            const { status } = req.body;
 
-            const user = await this.userRepository.findOne({ where: { id }, relations: { role: true } });
-            if (!user) {
-                throw new Error("Không tìm thấy thành viên.");
-            }
-
-            const oldData = { email: user.email, status: user.status };
-
-            user.status = status;
-            const saved = await this.userRepository.save(user);
+            const { saved, oldData } = await userService.toggleStatus(id, status);
 
             // Audit log
             await AuditLogService.log(req, {
                 module: "QUẢN LÝ THÀNH VIÊN",
                 action: "CẬP NHẬT TRẠNG THÁI",
-                description: `Thay đổi trạng thái tài khoản thành công: ${user.email} sang ${status}`,
+                description: `Thay đổi trạng thái tài khoản thành công: ${saved.email} sang ${status}`,
                 oldData,
-                newData: { email: user.email, status }
+                newData: { email: saved.email, status }
             });
 
             return ResponseHelper.success(res, {
                 id: saved.id,
                 email: saved.email,
                 fullName: saved.fullName,
-                role: saved.role?.roleName || "OFFICER",
+                role: saved.role,
                 status: saved.status
             }, "Cập nhật trạng thái thành công!");
         } catch (error: any) {

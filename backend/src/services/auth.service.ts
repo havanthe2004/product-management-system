@@ -1,13 +1,11 @@
 import { User } from "../entities/user.entity";
 import { RefreshToken } from "../entities/refresh-token.entity";
-import { Role } from "../entities/role.entity";
 import { PasswordResetOtp } from "../entities/password-reset-otp.entity";
 import { UserStatus } from "../common/enums/user-status.enum";
 import { OtpStatus } from "../common/enums/otp-status.enum";
-import { RegisterReqDto, LoginReqDto, ForgotPasswordReqDto, ResetPasswordReqDto } from "../dto/auth.req.dto";
-import { LoginResDto, UserDto } from "../dto/auth.res.dto";
+import { LoginReqDto, ForgotPasswordReqDto, ResetPasswordReqDto } from "../dto/auth.req.dto";
+import { LoginResDto } from "../dto/auth.res.dto";
 import { EmailHelper } from "../utils/email.helper";
-import crypto from "crypto";
 import { UserRepository } from "../repositories/user.repository";
 import { RefreshTokenRepository } from "../repositories/refresh-token.repository";
 import { AppDataSource } from "../config/data-source";
@@ -17,68 +15,11 @@ import jwt from "jsonwebtoken";
 export class AuthService {
     private userRepository = UserRepository;
     private refreshTokenRepository = RefreshTokenRepository;
-    private roleRepository = AppDataSource.getRepository(Role);
     private otpRepository = AppDataSource.getRepository(PasswordResetOtp);
 
     private readonly JWT_SECRET = process.env.JWT_SECRET || "fallback_secret_key";
     private readonly JWT_ACCESS_EXPIRATION = "15m";
     private readonly JWT_REFRESH_EXPIRATION = "7d";
-
-    /**
-     * Register a new user account
-     */
-    async register(dto: RegisterReqDto): Promise<UserDto> {
-        const { email, password, confirmPassword, fullName } = dto;
-
-        // 1. Basic validation
-        if (!email || !password || !fullName) {
-            throw new Error("Vui lòng điền đầy đủ thông tin bắt buộc (email, mật khẩu, họ tên).");
-        }
-
-        if (password.length < 6) {
-            throw new Error("Mật khẩu phải có ít nhất 6 ký tự.");
-        }
-
-        if (confirmPassword && password !== confirmPassword) {
-            throw new Error("Mật khẩu xác nhận không khớp.");
-        }
-
-        // 2. Check if email already exists using custom UserRepository method
-        const existingUser = await this.userRepository.findByEmail(email);
-        if (existingUser) {
-            throw new Error("Email này đã được sử dụng bởi một tài khoản khác.");
-        }
-
-        // 3. Find or create default OFFICER role
-        let officerRole = await this.roleRepository.findOne({ where: { roleName: "OFFICER" } });
-        if (!officerRole) {
-            officerRole = new Role();
-            officerRole.roleName = "OFFICER";
-            officerRole.description = "Officer role with standard privileges";
-            await this.roleRepository.save(officerRole);
-        }
-
-        // 4. Hash the password
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        // 5. Create new User
-        const user = new User();
-        user.email = email;
-        user.password = hashedPassword;
-        user.fullName = fullName;
-        user.role = officerRole;
-        user.status = UserStatus.ACTIVE;
-
-        await this.userRepository.save(user);
-
-        return {
-            id: user.id,
-            email: user.email,
-            fullName: user.fullName,
-            role: user.role.roleName,
-            isActive: user.status === UserStatus.ACTIVE
-        };
-    }
 
     /**
      * Authenticate user and return tokens
@@ -109,7 +50,7 @@ export class AuthService {
 
         // 4. Generate Access Token (contains user identity)
         const accessToken = jwt.sign(
-            { id: user.id, email: user.email, role: user.role?.roleName || "OFFICER" },
+            { id: user.id, email: user.email, role: user.role || "OFFICER" },
             this.JWT_SECRET,
             { expiresIn: this.JWT_ACCESS_EXPIRATION }
         );
@@ -138,7 +79,7 @@ export class AuthService {
                 id: user.id,
                 email: user.email,
                 fullName: user.fullName,
-                role: user.role?.roleName || "OFFICER",
+                role: user.role || "OFFICER",
                 isActive: user.status === UserStatus.ACTIVE
             },
             accessToken,
@@ -151,7 +92,6 @@ export class AuthService {
      */
     async forgotPassword(dto: ForgotPasswordReqDto): Promise<{
         message: string;
-        //  otp: string
     }> {
         const { email } = dto;
         if (!email) {
@@ -197,7 +137,6 @@ export class AuthService {
 
         return {
             message: "Mã OTP khôi phục mật khẩu đã được gửi đến email của bạn."
-            // otp: otp
         };
     }
 

@@ -8,34 +8,34 @@ export class AuthController {
     /**
      * Handle user registration request
      */
-    async register(req: Request, res: Response): Promise<Response> {
-        try {
-            const result = await authService.register(req.body);
+    // async createUser(req: Request, res: Response): Promise<Response> {
+    //     try {
+    //         const result = await authService.register(req.body);
 
-            // Ghi nhận lịch sử Đăng ký tài khoản
-            await AuditLogService.log(req, {
-                email: result.email,
-                module: "NGƯỜI DÙNG",
-                action: "ĐĂNG KÝ TÀI KHOẢN",
-                description: `Đăng ký tài khoản mới thành công cho người dùng: ${result.fullName} (${result.email})`,
-                newData: { email: result.email, fullName: result.fullName }
-            });
+    //         // Ghi nhận lịch sử Đăng ký tài khoản
+    //         await AuditLogService.log(req, {
+    //             email: result.email,
+    //             module: "NGƯỜI DÙNG",
+    //             action: "ĐĂNG KÝ TÀI KHOẢN",
+    //             description: `Đăng ký tài khoản mới thành công cho người dùng: ${result.fullName} (${result.email})`,
+    //             newData: { email: result.email, fullName: result.fullName }
+    //         });
 
-            return ResponseHelper.success(
-                res,
-                result,
-                "Đăng ký tài khoản thành công!",
-                201
-            );
-        } catch (error: any) {
-            return ResponseHelper.error(
-                res,
-                error.message,
-                null,
-                400
-            );
-        }
-    }
+    //         return ResponseHelper.success(
+    //             res,
+    //             result,
+    //             "Đăng ký tài khoản thành công!",
+    //             201
+    //         );
+    //     } catch (error: any) {
+    //         return ResponseHelper.error(
+    //             res,
+    //             error.message,
+    //             null,
+    //             400
+    //         );
+    //     }
+    // }
 
 
     async login(req: Request, res: Response): Promise<Response> {

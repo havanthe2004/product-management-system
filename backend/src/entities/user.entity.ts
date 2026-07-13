@@ -8,7 +8,7 @@ import {
     UpdateDateColumn,
     DeleteDateColumn,
 } from "typeorm";
-import { Role } from "./role.entity";
+import { UserRole } from "../common/enums/user-role.enum";
 import { UserStatus } from "../common/enums/user-status.enum";
 
 @Entity("users")
@@ -17,11 +17,12 @@ export class User {
     @PrimaryGeneratedColumn({ type: "bigint" })
     id: number;
 
-    @ManyToOne(() => Role)
-    @JoinColumn({
-        name: "role_id",
+    @Column({
+        type: "enum",
+        enum: UserRole,
+        default: UserRole.OFFICER,
     })
-    role: Role;
+    role: UserRole;
 
     @Column({
         name: "full_name",
@@ -45,10 +46,31 @@ export class User {
 
     @Column({
         type: "varchar",
+        length: 255,
+    })
+    idCardNumber: string;
+
+    @Column({
+        type: "date",
+        name: "dob",
+        nullable: true,
+    })
+    dateOfBirth: Date;
+
+    @Column({
+        type: "varchar",
+        length: 100,
+        nullable: true,
+    })
+    gender: string;
+
+    @Column({
+        type: "varchar",
         length: 20,
         nullable: true,
     })
     phone: string;
+
 
     @Column({
         type: "varchar",
