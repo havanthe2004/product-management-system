@@ -40,3 +40,13 @@ export async function deleteCatalog(endpoint: string, id: number): Promise<BaseR
   const res = await api.delete<BaseResponse<any>>(`/${endpoint}/${id}`);
   return res.data;
 }
+
+export async function getTrashCatalog(endpoint: string): Promise<BaseResponse<any[]>> {
+  const res = await api.get<BaseResponse<any[]>>(`/${endpoint}/trash`);
+  return res.data;
+}
+
+export async function restoreCatalog(endpoint: string, id: number): Promise<BaseResponse<any>> {
+  const res = await api.post<BaseResponse<any>>(`/${endpoint}/${id}/restore`);
+  return res.data;
+}
