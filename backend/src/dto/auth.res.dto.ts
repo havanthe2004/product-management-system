@@ -4,6 +4,7 @@ export interface UserDto {
     fullName: string;
     role: string;
     isActive: boolean;
+    avatar?: string | null;
 }
 
 export interface LoginResDto {

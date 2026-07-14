@@ -1,6 +1,9 @@
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { logout, UserRole } from '../store/slices/authSlice';
 
+// export const DEFAULT_AVATAR = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="50" fill="%23E2E8F0"/><path d="M50 55c-15 0-25 8-25 20v5h50v-5c0-12-10-20-25-20zm0-35c-9.66 0-17.5 7.84-17.5 17.5S40.34 55 50 55s17.5-7.84 17.5-17.5S59.66 20 50 20z" fill="%2394A3B8"/></svg>`;
+
+export const DEFAULT_AVATAR = `../../public/image.png`
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: any) => void;
@@ -15,6 +18,16 @@ export default function Sidebar({
 
   const getNavItemClass = (tab: string) => {
     return activeTab === tab ? 'sidebar-link active' : 'sidebar-link';
+  };
+
+  const getAvatarUrl = (avatarPath: string | undefined) => {
+    if (!avatarPath) return DEFAULT_AVATAR;
+    if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://') || avatarPath.startsWith('data:')) {
+      return avatarPath;
+    }
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
+    const hostUrl = apiBaseUrl.replace(/\/api$/, '');
+    return `${hostUrl}${avatarPath}`;
   };
 
   const getRoleLabel = (role: string | undefined) => {
@@ -44,55 +57,73 @@ export default function Sidebar({
       </div>
 
       {/* User Quick Info */}
-      <div 
-        className="user-profile-summary"
+      <div
+        className={`user-profile-summary ${activeTab === 'profile' ? 'active' : ''}`}
+        onClick={() => setActiveTab('profile')}
         style={{
           display: 'flex',
           alignItems: 'center',
           gap: '12px',
           padding: '12px 8px',
           borderBottom: '1px solid var(--border-color)',
-          marginBottom: '20px'
+          marginBottom: '20px',
+          cursor: 'pointer',
+          borderRadius: '8px',
+          transition: 'all 0.2s ease',
+          backgroundColor: activeTab === 'profile' ? 'var(--primary-light)' : 'transparent'
+        }}
+        onMouseEnter={(e) => {
+          if (activeTab !== 'profile') {
+            e.currentTarget.style.backgroundColor = 'var(--bg-hover)';
+          }
+        }}
+        onMouseLeave={(e) => {
+          if (activeTab !== 'profile') {
+            e.currentTarget.style.backgroundColor = 'transparent';
+          }
         }}
       >
         <img
-          src={auth.user?.avatar || '../../public/image.png'}
+          src={getAvatarUrl(auth.user?.avatar)}
           alt="Avatar"
           style={{
             width: '44px',
             height: '44px',
             borderRadius: '50%',
             objectFit: 'cover',
-            border: '2px solid var(--primary)',
+            border: activeTab === 'profile' ? '2px solid var(--primary)' : '2px solid var(--border-color)',
             backgroundColor: 'var(--bg-main)'
           }}
           onError={(e) => {
-            (e.target as HTMLImageElement).src = '/default-avatar.png';
+            const target = e.target as HTMLImageElement;
+            if (target.src !== DEFAULT_AVATAR) {
+              target.src = DEFAULT_AVATAR;
+            }
           }}
         />
         <div style={{ display: 'flex', flexDirection: 'column', minWidth: 0, flex: 1 }}>
-          <strong 
-            style={{ 
-              fontSize: '14px', 
+          <strong
+            style={{
+              fontSize: '14px',
               fontWeight: '600',
               color: 'var(--text-main)',
-              whiteSpace: 'nowrap', 
-              overflow: 'hidden', 
-              textOverflow: 'ellipsis' 
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
             }}
             title={auth.user?.fullName}
           >
             {auth.user?.fullName}
           </strong>
-          <span 
-            style={{ 
-              fontSize: '12px', 
+          <span
+            style={{
+              fontSize: '12px',
               color: 'var(--primary)',
               fontWeight: '600',
               marginTop: '2px',
-              whiteSpace: 'nowrap', 
-              overflow: 'hidden', 
-              textOverflow: 'ellipsis' 
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis'
             }}
           >
             {getRoleLabel(auth.user?.role)}
@@ -101,13 +132,13 @@ export default function Sidebar({
       </div>
 
       {/* Navigation - Scrollable inside the remaining space */}
-      <nav 
-        className="sidebar-nav" 
-        style={{ 
-          display: 'flex', 
-          flexDirection: 'column', 
-          gap: '4px', 
-          flex: 1, 
+      <nav
+        className="sidebar-nav"
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '4px',
+          flex: 1,
           overflowY: 'auto',
           marginRight: '-8px',
           paddingRight: '8px'

@@ -1,5 +1,7 @@
 import { useState, useEffect } from 'react';
-import { useAppSelector } from './store/hooks';
+import { useAppSelector, useAppDispatch } from './store/hooks';
+import { getProfile } from './services/profile.service';
+import { updateUserSuccess } from './store/slices/authSlice';
 import Login from './components/Login';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
@@ -12,14 +14,31 @@ import StandardsTab from './components/StandardsTab';
 import UnitsTab from './components/UnitsTab';
 import MembersTab from './components/MembersTab';
 import AuditLogsTab from './components/AuditLogsTab';
+import ProfileTab from './components/ProfileTab';
 
 import { UserRole } from './store/slices/authSlice';
 
 function App() {
+  const dispatch = useAppDispatch();
   const auth = useAppSelector((state) => state.auth);
 
+  // Sync profile data on mount if authenticated
+  useEffect(() => {
+    if (auth.isAuthenticated) {
+      getProfile()
+        .then((res) => {
+          if (res.success && res.data) {
+            dispatch(updateUserSuccess(res.data));
+          }
+        })
+        .catch((err) => {
+          console.error('Failed to sync profile:', err);
+        });
+    }
+  }, [auth.isAuthenticated, dispatch]);
+
   // Layout Tab State
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'commodity-groups' | 'commodity-types' | 'countries' | 'standards' | 'units' | 'members' | 'audit-logs'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'commodity-groups' | 'commodity-types' | 'countries' | 'standards' | 'units' | 'members' | 'audit-logs' | 'profile'>('overview');
 
   // Theme state
   const [isDark, setIsDark] = useState(true);
@@ -96,6 +115,11 @@ function App() {
           {/* TAB 9: AUDIT LOGS */}
           {activeTab === 'audit-logs' && auth.user?.role === UserRole.ADMIN && (
             <AuditLogsTab />
+          )}
+
+          {/* TAB 10: USER PROFILE */}
+          {activeTab === 'profile' && (
+            <ProfileTab />
           )}
 
         </div>

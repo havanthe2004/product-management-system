@@ -1,9 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import { useAppSelector } from '../store/hooks';
 import * as userService from '../services/user.service';
+import { DEFAULT_AVATAR } from './Sidebar';
 
 export default function MembersTab() {
   const [members, setMembers] = useState<any[]>([]);
+
+  const getAvatarUrl = (avatarPath: string | undefined) => {
+    if (!avatarPath) return DEFAULT_AVATAR;
+    if (avatarPath.startsWith('http://') || avatarPath.startsWith('https://') || avatarPath.startsWith('data:')) {
+      return avatarPath;
+    }
+    const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api';
+    const hostUrl = apiBaseUrl.replace(/\/api$/, '');
+    return `${hostUrl}${avatarPath}`;
+  };
 
   const fetchMembers = async () => {
     try {
@@ -127,14 +138,17 @@ export default function MembersTab() {
                 <td>#{m.id}</td>
                 <td>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <img
-                      src={m.avatar || '../../public/image.png'}
-                      alt="Avatar"
-                      style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border-color)' }}
-                      onError={(e) => {
-                        (e.target as HTMLImageElement).src = '/default-avatar.png';
-                      }}
-                    />
+                     <img
+                       src={getAvatarUrl(m.avatar)}
+                       alt="Avatar"
+                       style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'cover', border: '1px solid var(--border-color)' }}
+                       onError={(e) => {
+                         const target = e.target as HTMLImageElement;
+                         if (target.src !== DEFAULT_AVATAR) {
+                           target.src = DEFAULT_AVATAR;
+                         }
+                       }}
+                     />
                     <strong>{m.fullName}</strong>
                   </div>
                 </td>
@@ -191,11 +205,14 @@ export default function MembersTab() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', marginTop: '16px' }}>
               <div style={{ display: 'flex', gap: '20px', alignItems: 'center', borderBottom: '1px solid var(--border-color)', paddingBottom: '16px' }}>
                 <img
-                  src={viewingMember.avatar || '../../public/image.png'}
+                  src={getAvatarUrl(viewingMember.avatar)}
                   alt="Avatar"
                   style={{ width: '64px', height: '64px', borderRadius: '50%', objectFit: 'cover', border: '2px solid var(--primary)' }}
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src = '/default-avatar.png';
+                    const target = e.target as HTMLImageElement;
+                    if (target.src !== DEFAULT_AVATAR) {
+                      target.src = DEFAULT_AVATAR;
+                    }
                   }}
                 />
                 <div>

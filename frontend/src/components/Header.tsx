@@ -25,6 +25,8 @@ export default function Header({ activeTab, isDark, setIsDark }: HeaderProps) {
         return '👥 Quản lý thành viên hệ thống';
       case 'audit-logs':
         return '📜 Nhật ký hoạt động hệ thống';
+      case 'profile':
+        return '👤 Thông tin cá nhân & Bảo mật';
       default:
         return 'ProMan Dashboard';
     }

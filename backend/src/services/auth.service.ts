@@ -80,7 +80,8 @@ export class AuthService {
                 email: user.email,
                 fullName: user.fullName,
                 role: user.role || "OFFICER",
-                isActive: user.status === UserStatus.ACTIVE
+                isActive: user.status === UserStatus.ACTIVE,
+                avatar: user.avatar
             },
             accessToken,
             refreshToken: refreshTokenVal

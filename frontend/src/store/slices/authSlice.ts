@@ -48,9 +48,20 @@ const authSlice = createSlice({
         state.user.fullName = action.payload === UserRole.ADMIN ? 'Quản trị viên' : action.payload === UserRole.MANAGER ? 'Quản lý' : 'Nguyen Van A';
         state.user.username = action.payload === UserRole.ADMIN ? 'admin01' : action.payload === UserRole.MANAGER ? 'manager01' : 'officer01';
       }
+    },
+    updateUserSuccess: (state, action: PayloadAction<User>) => {
+      if (state.user) {
+        const mappedUser = {
+          ...state.user,
+          ...action.payload,
+          username: action.payload.email
+        };
+        state.user = mappedUser;
+        localStorage.setItem('user', JSON.stringify(mappedUser));
+      }
     }
   },
 });
 
-export const { loginSuccess, logout, switchRole } = authSlice.actions;
+export const { loginSuccess, logout, switchRole, updateUserSuccess } = authSlice.actions;
 export default authSlice.reducer;
