@@ -83,6 +83,7 @@ export interface Unit {
   symbol: string;
   description?: string;
   status: 'ACTIVE' | 'INACTIVE';
+  approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
 
 export interface AuditLog {

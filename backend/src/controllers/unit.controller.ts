@@ -1,17 +1,14 @@
 import { Request, Response } from "express";
-import { AppDataSource } from "../config/data-source";
-import { Unit } from "../entities/unit.entity";
+import { unitService } from "../services/unit.service";
 import { ResponseHelper } from "../utils/response.helper";
 import { AuditLogService } from "../services/audit-log.service";
+import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 
 export class UnitController {
-    private unitRepository = AppDataSource.getRepository(Unit);
 
     async getAll(req: Request, res: Response): Promise<Response> {
         try {
-            const list = await this.unitRepository.find({
-                order: { createdAt: "DESC" }
-            });
+            const list = await unitService.getAll();
             return ResponseHelper.success(res, list, "Lấy danh sách đơn vị đo lường thành công!");
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
@@ -20,29 +17,17 @@ export class UnitController {
 
     async create(req: Request, res: Response): Promise<Response> {
         try {
-            const { unitCode, unitName, symbol, description, status } = req.body;
-            if (!unitName || !symbol) {
-                throw new Error("Tên đơn vị và ký hiệu là bắt buộc.");
-            }
-
-            const unit = new Unit();
-            unit.unitCode = unitCode || "";
-            unit.unitName = unitName;
-            unit.symbol = symbol;
-            unit.description = description || "";
-            unit.status = status;
-
-            const saved = await this.unitRepository.save(unit);
+            const saved = await unitService.create(req.body);
 
             // Audit log
             await AuditLogService.log(req, {
                 module: "QUẢN LÝ ĐƠN VỊ ĐO LƯỜNG",
                 action: "THÊM MỚI",
-                description: `Thêm mới đơn vị đo lường thành công: ${unitName} (${symbol})`,
+                description: `Thêm mới đơn vị đo lường thành công (chờ duyệt/ngừng hoạt động): ${saved.unitName} (${saved.symbol})`,
                 newData: saved
             });
 
-            return ResponseHelper.success(res, saved, "Tạo đơn vị đo lường thành công!", 201);
+            return ResponseHelper.success(res, saved, "Tạo đơn vị đo lường thành công! Trạng thái: Chờ duyệt & Ngừng hoạt động.", 201);
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
         }
@@ -51,28 +36,14 @@ export class UnitController {
     async update(req: Request, res: Response): Promise<Response> {
         try {
             const id = Number(req.params.id);
-            const { unitCode, unitName, symbol, description, status } = req.body;
-
-            const unit = await this.unitRepository.findOne({ where: { id } });
-            if (!unit) {
-                throw new Error("Không tìm thấy đơn vị cần cập nhật.");
-            }
-
-            const oldData = { ...unit };
-
-            if (unitCode !== undefined) unit.unitCode = unitCode;
-            if (unitName) unit.unitName = unitName;
-            if (symbol) unit.symbol = symbol;
-            if (description !== undefined) unit.description = description;
-            if (status) unit.status = status;
-
-            const saved = await this.unitRepository.save(unit);
+            const userRole = (req as AuthenticatedRequest).user?.role;
+            const { saved, oldData } = await unitService.update(id, req.body, userRole);
 
             // Audit log
             await AuditLogService.log(req, {
                 module: "QUẢN LÝ ĐƠN VỊ ĐO LƯỜNG",
                 action: "CẬP NHẬT",
-                description: `Cập nhật đơn vị đo lường thành công: ${unit.unitName} (${unit.symbol})`,
+                description: `Cập nhật đơn vị đo lường thành công: ${saved.unitName} (${saved.symbol})`,
                 oldData,
                 newData: saved
             });
@@ -86,13 +57,8 @@ export class UnitController {
     async delete(req: Request, res: Response): Promise<Response> {
         try {
             const id = Number(req.params.id);
-            const unit = await this.unitRepository.findOne({ where: { id } });
-            if (!unit) {
-                throw new Error("Không tìm thấy đơn vị cần xóa.");
-            }
-
-            const oldData = { ...unit };
-            await this.unitRepository.remove(unit);
+            const userRole = (req as AuthenticatedRequest).user?.role;
+            const { unit, oldData } = await unitService.softDelete(id, userRole);
 
             // Audit log
             await AuditLogService.log(req, {
@@ -103,6 +69,35 @@ export class UnitController {
             });
 
             return ResponseHelper.success(res, null, "Xóa đơn vị đo lường thành công!");
+        } catch (error: any) {
+            return ResponseHelper.error(res, error.message, null, 400);
+        }
+    }
+
+    async getTrash(req: Request, res: Response): Promise<Response> {
+        try {
+            const list = await unitService.getTrash();
+            return ResponseHelper.success(res, list, "Lấy danh sách thùng rác thành công!");
+        } catch (error: any) {
+            return ResponseHelper.error(res, error.message, null, 400);
+        }
+    }
+
+    async restore(req: Request, res: Response): Promise<Response> {
+        try {
+            const id = Number(req.params.id);
+            const userRole = (req as AuthenticatedRequest).user?.role;
+            const saved = await unitService.restore(id, userRole);
+
+            // Audit log
+            await AuditLogService.log(req, {
+                module: "QUẢN LÝ ĐƠN VỊ ĐO LƯỜNG",
+                action: "KHÔI PHỤC",
+                description: `Khôi phục đơn vị đo lường thành công: ${saved.unitName} (${saved.symbol})`,
+                newData: saved
+            });
+
+            return ResponseHelper.success(res, saved, "Khôi phục đơn vị đo lường thành công!");
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
         }

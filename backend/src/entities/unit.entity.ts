@@ -7,6 +7,7 @@ import {
     DeleteDateColumn,
 } from "typeorm";
 import { CommodityStatus } from "../common/enums/commodity-status.enum";
+import { ApprovalStatus } from "../common/enums/approval-status.enum";
 
 @Entity("units")
 export class Unit {
@@ -44,9 +45,17 @@ export class Unit {
     @Column({
         type: "enum",
         enum: CommodityStatus,
-        default: CommodityStatus.ACTIVE,
+        default: CommodityStatus.INACTIVE,
     })
     status: CommodityStatus;
+
+    @Column({
+        name: "approval_status",
+        type: "enum",
+        enum: ApprovalStatus,
+        default: ApprovalStatus.PENDING,
+    })
+    approvalStatus: ApprovalStatus;
 
     @CreateDateColumn({
         name: "created_at",
