@@ -44,6 +44,7 @@ export interface CommodityGroup {
   groupName: string;
   description?: string;
   status: 'ACTIVE' | 'INACTIVE';
+  approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
 
 export interface CommodityType {
@@ -54,15 +55,16 @@ export interface CommodityType {
   status: 'ACTIVE' | 'INACTIVE';
   groupId: number;
   group?: CommodityGroup;
+  approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
 
 export interface Country {
   id: number;
   isoCode: string;
   countryName: string;
-  region?: string;
   description?: string;
   status: 'ACTIVE' | 'INACTIVE';
+  approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
 
 export interface QualityStandard {

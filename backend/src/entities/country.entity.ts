@@ -7,6 +7,7 @@ import {
     DeleteDateColumn,
 } from "typeorm";
 import { CommodityStatus } from "../common/enums/commodity-status.enum";
+import { ApprovalStatus } from "../common/enums/approval-status.enum";
 
 @Entity("countries")
 export class Country {
@@ -29,12 +30,6 @@ export class Country {
     })
     countryName: string;
 
-    @Column({
-        type: "varchar",
-        length: 100,
-        nullable: true,
-    })
-    region: string;
 
     @Column({
         type: "text",
@@ -45,9 +40,17 @@ export class Country {
     @Column({
         type: "enum",
         enum: CommodityStatus,
-        default: CommodityStatus.ACTIVE,
+        default: CommodityStatus.INACTIVE,
     })
     status: CommodityStatus;
+
+    @Column({
+        name: "approval_status",
+        type: "enum",
+        enum: ApprovalStatus,
+        default: ApprovalStatus.PENDING,
+    })
+    approvalStatus: ApprovalStatus;
 
     @CreateDateColumn({
         name: "created_at",

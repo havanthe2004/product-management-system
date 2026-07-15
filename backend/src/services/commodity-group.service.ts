@@ -63,7 +63,7 @@ export class CommodityGroupService {
         const isFieldsChanged =
             (groupCode !== undefined && groupCode !== group.groupCode) ||
             (groupName !== undefined && groupName !== group.groupName) ||
-            (description !== undefined && (description || "") !== (group.description || ""));
+            (description !== undefined && description !== group.description);
 
         // Rule 1: Khi nhóm mặt hàng ở trạng thái hoạt động hoặc đã duyệt thì không cho cập nhật thông tin khác, chỉ có thể cập nhật trạng thái hoạt động thành ngừng hoạt động
         if (group.status === CommodityStatus.ACTIVE && isFieldsChanged) {
@@ -89,7 +89,10 @@ export class CommodityGroupService {
             group.approvalStatus = approvalStatus;
         }
 
-        if (status !== undefined) {
+        if (status !== undefined && status !== group.status) {
+            if (userRole !== "ADMIN" && userRole !== "MANAGER") {
+                throw new Error("Bạn không có quyền thay đổi trạng thái hoạt động.");
+            }
             group.status = status;
         }
 

@@ -4,6 +4,7 @@ import { CommodityTypeRepository } from "../repositories/commodity-type.reposito
 import { CommodityGroupRepository } from "../repositories/commodity-group.repository";
 import { CommodityStatus } from "../common/enums/commodity-status.enum";
 import { ApprovalStatus } from "../common/enums/approval-status.enum";
+import { CreateCommodityTypeReqDto, UpdateCommodityTypeReqDto } from "../dto/commodity-type.dto";
 
 export class CommodityTypeService {
     private typeRepository = CommodityTypeRepository;
@@ -27,7 +28,7 @@ export class CommodityTypeService {
         });
     }
 
-    async create(dto: { typeCode: string; typeName: string; description?: string; groupId: number }): Promise<CommodityType> {
+    async create(dto: CreateCommodityTypeReqDto): Promise<CommodityType> {
         const { typeCode, typeName, description, groupId } = dto;
         if (!typeCode || !typeName || !groupId) {
             throw new Error("Mã loại, tên loại và nhóm mặt hàng là bắt buộc.");
@@ -57,7 +58,7 @@ export class CommodityTypeService {
 
     async update(
         id: number,
-        dto: { typeCode?: string; typeName?: string; description?: string; status?: CommodityStatus; approvalStatus?: ApprovalStatus; groupId?: number },
+        dto: UpdateCommodityTypeReqDto,
         userRole?: string
     ): Promise<{ saved: CommodityType; oldData: CommodityType }> {
         const { typeCode, typeName, description, status, approvalStatus, groupId } = dto;
@@ -103,7 +104,10 @@ export class CommodityTypeService {
             type.approvalStatus = approvalStatus;
         }
 
-        if (status !== undefined) {
+        if (status !== undefined && status !== type.status) {
+            if (userRole !== "ADMIN" && userRole !== "MANAGER") {
+                throw new Error("Bạn không có quyền thay đổi trạng thái hoạt động.");
+            }
             type.status = status;
         }
 
