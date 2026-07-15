@@ -7,6 +7,7 @@ import {
     DeleteDateColumn,
 } from "typeorm";
 import { CommodityStatus } from "../common/enums/commodity-status.enum";
+import { ApprovalStatus } from "../common/enums/approval-status.enum";
 
 @Entity("quality_standards")
 export class QualityStandard {
@@ -38,9 +39,17 @@ export class QualityStandard {
     @Column({
         type: "enum",
         enum: CommodityStatus,
-        default: CommodityStatus.ACTIVE,
+        default: CommodityStatus.INACTIVE,
     })
     status: CommodityStatus;
+
+    @Column({
+        name: "approval_status",
+        type: "enum",
+        enum: ApprovalStatus,
+        default: ApprovalStatus.PENDING,
+    })
+    approvalStatus: ApprovalStatus;
 
     @CreateDateColumn({
         name: "created_at",

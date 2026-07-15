@@ -73,6 +73,7 @@ export interface QualityStandard {
   standardName: string;
   description?: string;
   status: 'ACTIVE' | 'INACTIVE';
+  approvalStatus?: 'PENDING' | 'APPROVED' | 'REJECTED';
 }
 
 export interface Unit {

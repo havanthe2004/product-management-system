@@ -1,17 +1,14 @@
 import { Request, Response } from "express";
-import { AppDataSource } from "../config/data-source";
-import { QualityStandard } from "../entities/quality-standard.entity";
+import { qualityStandardService } from "../services/quality-standard.service";
 import { ResponseHelper } from "../utils/response.helper";
 import { AuditLogService } from "../services/audit-log.service";
+import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 
 export class QualityStandardController {
-    private standardRepository = AppDataSource.getRepository(QualityStandard);
 
     async getAll(req: Request, res: Response): Promise<Response> {
         try {
-            const list = await this.standardRepository.find({
-                order: { createdAt: "DESC" }
-            });
+            const list = await qualityStandardService.getAll();
             return ResponseHelper.success(res, list, "Lấy danh sách tiêu chuẩn chất lượng thành công!");
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
@@ -20,33 +17,17 @@ export class QualityStandardController {
 
     async create(req: Request, res: Response): Promise<Response> {
         try {
-            const { standardCode, standardName, description, status } = req.body;
-            if (!standardCode || !standardName) {
-                throw new Error("Mã tiêu chuẩn và tên tiêu chuẩn là bắt buộc.");
-            }
-
-            const existing = await this.standardRepository.findOne({ where: { standardCode } });
-            if (existing) {
-                throw new Error("Mã tiêu chuẩn chất lượng này đã tồn tại.");
-            }
-
-            const standard = new QualityStandard();
-            standard.standardCode = standardCode;
-            standard.standardName = standardName;
-            standard.description = description || "";
-            standard.status = status;
-
-            const saved = await this.standardRepository.save(standard);
+            const saved = await qualityStandardService.create(req.body);
 
             // Audit log
             await AuditLogService.log(req, {
                 module: "QUẢN LÝ TIÊU CHUẨN CHẤT LƯỢNG",
                 action: "THÊM MỚI",
-                description: `Thêm mới tiêu chuẩn kỹ thuật thành công: ${standardName} (${standardCode})`,
+                description: `Thêm mới tiêu chuẩn kỹ thuật thành công (chờ duyệt/ngừng hoạt động): ${saved.standardName} (${saved.standardCode})`,
                 newData: saved
             });
 
-            return ResponseHelper.success(res, saved, "Tạo tiêu chuẩn chất lượng thành công!", 201);
+            return ResponseHelper.success(res, saved, "Tạo tiêu chuẩn chất lượng thành công! Trạng thái: Chờ duyệt & Ngừng hoạt động.", 201);
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
         }
@@ -55,34 +36,14 @@ export class QualityStandardController {
     async update(req: Request, res: Response): Promise<Response> {
         try {
             const id = Number(req.params.id);
-            const { standardCode, standardName, description, status } = req.body;
-
-            const standard = await this.standardRepository.findOne({ where: { id } });
-            if (!standard) {
-                throw new Error("Không tìm thấy tiêu chuẩn chất lượng cần cập nhật.");
-            }
-
-            const oldData = { ...standard };
-
-            if (standardCode && standardCode !== standard.standardCode) {
-                const existing = await this.standardRepository.findOne({ where: { standardCode } });
-                if (existing) {
-                    throw new Error("Mã tiêu chuẩn chất lượng này đã tồn tại ở bản ghi khác.");
-                }
-                standard.standardCode = standardCode;
-            }
-
-            if (standardName) standard.standardName = standardName;
-            if (description !== undefined) standard.description = description;
-            if (status) standard.status = status;
-
-            const saved = await this.standardRepository.save(standard);
+            const userRole = (req as AuthenticatedRequest).user?.role;
+            const { saved, oldData } = await qualityStandardService.update(id, req.body, userRole);
 
             // Audit log
             await AuditLogService.log(req, {
                 module: "QUẢN LÝ TIÊU CHUẨN CHẤT LƯỢNG",
                 action: "CẬP NHẬT",
-                description: `Cập nhật tiêu chuẩn kỹ thuật thành công: ${standard.standardName} (${standard.standardCode})`,
+                description: `Cập nhật tiêu chuẩn kỹ thuật thành công: ${saved.standardName} (${saved.standardCode})`,
                 oldData,
                 newData: saved
             });
@@ -96,13 +57,8 @@ export class QualityStandardController {
     async delete(req: Request, res: Response): Promise<Response> {
         try {
             const id = Number(req.params.id);
-            const standard = await this.standardRepository.findOne({ where: { id } });
-            if (!standard) {
-                throw new Error("Không tìm thấy tiêu chuẩn chất lượng cần xóa.");
-            }
-
-            const oldData = { ...standard };
-            await this.standardRepository.remove(standard);
+            const userRole = (req as AuthenticatedRequest).user?.role;
+            const { standard, oldData } = await qualityStandardService.softDelete(id, userRole);
 
             // Audit log
             await AuditLogService.log(req, {
@@ -113,6 +69,35 @@ export class QualityStandardController {
             });
 
             return ResponseHelper.success(res, null, "Xóa tiêu chuẩn chất lượng thành công!");
+        } catch (error: any) {
+            return ResponseHelper.error(res, error.message, null, 400);
+        }
+    }
+
+    async getTrash(req: Request, res: Response): Promise<Response> {
+        try {
+            const list = await qualityStandardService.getTrash();
+            return ResponseHelper.success(res, list, "Lấy danh sách thùng rác thành công!");
+        } catch (error: any) {
+            return ResponseHelper.error(res, error.message, null, 400);
+        }
+    }
+
+    async restore(req: Request, res: Response): Promise<Response> {
+        try {
+            const id = Number(req.params.id);
+            const userRole = (req as AuthenticatedRequest).user?.role;
+            const saved = await qualityStandardService.restore(id, userRole);
+
+            // Audit log
+            await AuditLogService.log(req, {
+                module: "QUẢN LÝ TIÊU CHUẨN CHẤT LƯỢNG",
+                action: "KHÔI PHỤC",
+                description: `Khôi phục tiêu chuẩn kỹ thuật thành công: ${saved.standardName} (${saved.standardCode})`,
+                newData: saved
+            });
+
+            return ResponseHelper.success(res, saved, "Khôi phục tiêu chuẩn chất lượng thành công!");
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
         }
