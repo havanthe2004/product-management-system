@@ -3,7 +3,7 @@ import { logout, UserRole } from '../store/slices/authSlice';
 
 // export const DEFAULT_AVATAR = `data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none"><circle cx="50" cy="50" r="50" fill="%23E2E8F0"/><path d="M50 55c-15 0-25 8-25 20v5h50v-5c0-12-10-20-25-20zm0-35c-9.66 0-17.5 7.84-17.5 17.5S40.34 55 50 55s17.5-7.84 17.5-17.5S59.66 20 50 20z" fill="%2394A3B8"/></svg>`;
 
-export const DEFAULT_AVATAR = `../../public/image.png`
+export const DEFAULT_AVATAR = `/image.png`
 interface SidebarProps {
   activeTab: string;
   setActiveTab: (tab: any) => void;

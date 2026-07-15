@@ -1,20 +1,14 @@
 import { Request, Response } from "express";
-import { AppDataSource } from "../config/data-source";
-import { CommodityType } from "../entities/commodity-type.entity";
-import { CommodityGroup } from "../entities/commodity-group.entity";
+import { commodityTypeService } from "../services/commodity-type.service";
 import { ResponseHelper } from "../utils/response.helper";
 import { AuditLogService } from "../services/audit-log.service";
+import { AuthenticatedRequest } from "../middlewares/auth.middleware";
 
 export class CommodityTypeController {
-    private typeRepository = AppDataSource.getRepository(CommodityType);
-    private groupRepository = AppDataSource.getRepository(CommodityGroup);
 
     async getAll(req: Request, res: Response): Promise<Response> {
         try {
-            const list = await this.typeRepository.find({
-                relations: { group: true },
-                order: { createdAt: "DESC" }
-            });
+            const list = await commodityTypeService.getAll();
             return ResponseHelper.success(res, list, "Lấy danh sách loại mặt hàng thành công!");
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
@@ -23,39 +17,17 @@ export class CommodityTypeController {
 
     async create(req: Request, res: Response): Promise<Response> {
         try {
-            const { typeCode, typeName, description, status, groupId } = req.body;
-            if (!typeCode || !typeName || !groupId) {
-                throw new Error("Mã loại, tên loại và nhóm mặt hàng là bắt buộc.");
-            }
-
-            const group = await this.groupRepository.findOne({ where: { id: Number(groupId) } });
-            if (!group) {
-                throw new Error("Không tìm thấy nhóm mặt hàng tương ứng.");
-            }
-
-            const existing = await this.typeRepository.findOne({ where: { typeCode } });
-            if (existing) {
-                throw new Error("Mã loại mặt hàng này đã tồn tại.");
-            }
-
-            const type = new CommodityType();
-            type.typeCode = typeCode;
-            type.typeName = typeName;
-            type.description = description || "";
-            type.status = status;
-            type.group = group;
-
-            const saved = await this.typeRepository.save(type);
+            const saved = await commodityTypeService.create(req.body);
 
             // Audit log
             await AuditLogService.log(req, {
                 module: "DANH MỤC LOẠI MẶT HÀNG",
                 action: "THÊM MỚI",
-                description: `Thêm mới loại mặt hàng thành công: ${typeName} (${typeCode}) thuộc nhóm ${group.groupName}`,
+                description: `Thêm mới loại mặt hàng thành công (chờ duyệt/ngừng hoạt động): ${saved.typeName} (${saved.typeCode}) thuộc nhóm ${saved.group?.groupName}`,
                 newData: saved
             });
 
-            return ResponseHelper.success(res, saved, "Tạo loại mặt hàng thành công!", 201);
+            return ResponseHelper.success(res, saved, "Tạo loại mặt hàng thành công! Trạng thái: Chờ duyệt & Ngừng hoạt động.", 201);
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
         }
@@ -64,42 +36,14 @@ export class CommodityTypeController {
     async update(req: Request, res: Response): Promise<Response> {
         try {
             const id = Number(req.params.id);
-            const { typeCode, typeName, description, status, groupId } = req.body;
-
-            const type = await this.typeRepository.findOne({ where: { id }, relations: { group: true } });
-            if (!type) {
-                throw new Error("Không tìm thấy loại mặt hàng cần cập nhật.");
-            }
-
-            const oldData = { ...type };
-
-            if (groupId && Number(groupId) !== type.group.id) {
-                const group = await this.groupRepository.findOne({ where: { id: Number(groupId) } });
-                if (!group) {
-                    throw new Error("Không tìm thấy nhóm mặt hàng tương ứng.");
-                }
-                type.group = group;
-            }
-
-            if (typeCode && typeCode !== type.typeCode) {
-                const existing = await this.typeRepository.findOne({ where: { typeCode } });
-                if (existing) {
-                    throw new Error("Mã loại mặt hàng này đã tồn tại ở bản ghi khác.");
-                }
-                type.typeCode = typeCode;
-            }
-
-            if (typeName) type.typeName = typeName;
-            if (description !== undefined) type.description = description;
-            if (status) type.status = status;
-
-            const saved = await this.typeRepository.save(type);
+            const userRole = (req as AuthenticatedRequest).user?.role;
+            const { saved, oldData } = await commodityTypeService.update(id, req.body, userRole);
 
             // Audit log
             await AuditLogService.log(req, {
                 module: "DANH MỤC LOẠI MẶT HÀNG",
                 action: "CẬP NHẬT",
-                description: `Cập nhật loại mặt hàng thành công: ${type.typeName} (${type.typeCode})`,
+                description: `Cập nhật loại mặt hàng thành công: ${saved.typeName} (${saved.typeCode})`,
                 oldData,
                 newData: saved
             });
@@ -113,13 +57,8 @@ export class CommodityTypeController {
     async delete(req: Request, res: Response): Promise<Response> {
         try {
             const id = Number(req.params.id);
-            const type = await this.typeRepository.findOne({ where: { id } });
-            if (!type) {
-                throw new Error("Không tìm thấy loại mặt hàng cần xóa.");
-            }
-
-            const oldData = { ...type };
-            await this.typeRepository.remove(type);
+            const userRole = (req as AuthenticatedRequest).user?.role;
+            const { type, oldData } = await commodityTypeService.softDelete(id, userRole);
 
             // Audit log
             await AuditLogService.log(req, {
@@ -130,6 +69,35 @@ export class CommodityTypeController {
             });
 
             return ResponseHelper.success(res, null, "Xóa loại mặt hàng thành công!");
+        } catch (error: any) {
+            return ResponseHelper.error(res, error.message, null, 400);
+        }
+    }
+
+    async getTrash(req: Request, res: Response): Promise<Response> {
+        try {
+            const list = await commodityTypeService.getTrash();
+            return ResponseHelper.success(res, list, "Lấy danh sách thùng rác thành công!");
+        } catch (error: any) {
+            return ResponseHelper.error(res, error.message, null, 400);
+        }
+    }
+
+    async restore(req: Request, res: Response): Promise<Response> {
+        try {
+            const id = Number(req.params.id);
+            const userRole = (req as AuthenticatedRequest).user?.role;
+            const saved = await commodityTypeService.restore(id, userRole);
+
+            // Audit log
+            await AuditLogService.log(req, {
+                module: "DANH MỤC LOẠI MẶT HÀNG",
+                action: "KHÔI PHỤC",
+                description: `Khôi phục loại mặt hàng thành công: ${saved.typeName} (${saved.typeCode})`,
+                newData: saved
+            });
+
+            return ResponseHelper.success(res, saved, "Khôi phục loại mặt hàng thành công!");
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
         }

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useAppDispatch, useAppSelector } from '../store/hooks';
+import { useAppDispatch } from '../store/hooks';
 import { updateUserSuccess } from '../store/slices/authSlice';
 import { getProfile, updateProfile, changePassword } from '../services/profile.service';
 import type { User } from '../types';
@@ -7,7 +7,6 @@ import { DEFAULT_AVATAR } from './Sidebar';
 
 export default function ProfileTab() {
   const dispatch = useAppDispatch();
-  const auth = useAppSelector((state) => state.auth);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Sub tab state

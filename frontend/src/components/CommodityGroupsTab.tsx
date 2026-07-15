@@ -141,7 +141,7 @@ export default function CommodityGroupsTab() {
               <th style={{ width: '20%', padding: '12px 16px', textAlign: 'left', fontWeight: '700', color: 'var(--text-secondary)' }}>Mô tả</th>
               <th style={{ width: '15%', padding: '12px 16px', textAlign: 'center', fontWeight: '700', color: 'var(--text-secondary)' }}>Hoạt động</th>
               <th style={{ width: '17%', padding: '12px 16px', textAlign: 'center', fontWeight: '700', color: 'var(--text-secondary)' }}>Phê duyệt</th>
-              <th style={{ width: '17%', padding: '12px 16px', textAlign: 'right', fontWeight: '700', color: 'var(--text-secondary)' }}>Hành động</th>
+              <th style={{ width: '18%', padding: '12px 16px', textAlign: 'right', fontWeight: '700', color: 'var(--text-secondary)' }}>Hành động</th>
             </tr>
           </thead>
           <tbody>
@@ -316,18 +316,56 @@ export default function CommodityGroupsTab() {
               </button>
             </div>
             <form onSubmit={handleSave}>
-              <div className="form-group">
-                <label>Mã nhóm <span style={{ color: 'var(--danger)' }}>*</span></label>
-                <input type="text" className="input" required value={groupForm.groupCode} onChange={(e) => setGroupForm({ ...groupForm, groupCode: e.target.value })} placeholder="Ví dụ: DTGD" />
-              </div>
-              <div className="form-group">
-                <label>Tên nhóm <span style={{ color: 'var(--danger)' }}>*</span></label>
-                <input type="text" className="input" required value={groupForm.groupName} onChange={(e) => setGroupForm({ ...groupForm, groupName: e.target.value })} placeholder="Ví dụ: Điện tử Gia Dụng" />
-              </div>
-              <div className="form-group">
-                <label>Mô tả</label>
-                <textarea className="input" rows={3} value={groupForm.description || ''} onChange={(e) => setGroupForm({ ...groupForm, description: e.target.value })} placeholder="Mô tả nhóm mặt hàng..." />
-              </div>
+              {(() => {
+                const isReadOnly = !!groupForm.id && (groupForm.approvalStatus === 'APPROVED' || groupForm.status === 'ACTIVE');
+                return (
+                  <>
+                    <div className="form-group">
+                      <label>Mã nhóm <span style={{ color: 'var(--danger)' }}>*</span></label>
+                      <input 
+                        type="text" 
+                        className="input" 
+                        required 
+                        value={groupForm.groupCode} 
+                        onChange={(e) => setGroupForm({ ...groupForm, groupCode: e.target.value })} 
+                        placeholder="Ví dụ: DTGD" 
+                        disabled={isReadOnly}
+                        style={isReadOnly ? { backgroundColor: 'var(--bg-hover)', color: 'var(--text-muted)', cursor: 'not-allowed' } : {}}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Tên nhóm <span style={{ color: 'var(--danger)' }}>*</span></label>
+                      <input 
+                        type="text" 
+                        className="input" 
+                        required 
+                        value={groupForm.groupName} 
+                        onChange={(e) => setGroupForm({ ...groupForm, groupName: e.target.value })} 
+                        placeholder="Ví dụ: Điện tử Gia Dụng" 
+                        disabled={isReadOnly}
+                        style={isReadOnly ? { backgroundColor: 'var(--bg-hover)', color: 'var(--text-muted)', cursor: 'not-allowed' } : {}}
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Mô tả</label>
+                      <textarea 
+                        className="input" 
+                        rows={3} 
+                        value={groupForm.description || ''} 
+                        onChange={(e) => setGroupForm({ ...groupForm, description: e.target.value })} 
+                        placeholder="Mô tả nhóm mặt hàng..." 
+                        disabled={isReadOnly}
+                        style={isReadOnly ? { backgroundColor: 'var(--bg-hover)', color: 'var(--text-muted)', cursor: 'not-allowed' } : {}}
+                      />
+                      {isReadOnly && (
+                        <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginTop: '4px' }}>
+                          ⚠️ Chỉ cho phép sửa đổi thông tin khi trạng thái phê duyệt khác 'Đã duyệt' và trạng thái hoạt động là 'Ngừng hoạt động'.
+                        </span>
+                      )}
+                    </div>
+                  </>
+                );
+              })()}
 
               <div className="form-group">
                 <label>Trạng thái hoạt động</label>
@@ -354,26 +392,33 @@ export default function CommodityGroupsTab() {
                 <div className="form-group">
                   <label>Trạng thái phê duyệt</label>
                   {isAuthorizedToApprove ? (
-                    <select
-                      className="input"
-                      value={groupForm.approvalStatus}
+                    <select 
+                      className="input" 
+                      value={groupForm.approvalStatus} 
                       onChange={(e) => setGroupForm({ ...groupForm, approvalStatus: e.target.value })}
+                      disabled={groupForm.status === 'ACTIVE'}
+                      style={groupForm.status === 'ACTIVE' ? { backgroundColor: 'var(--bg-hover)', color: 'var(--text-muted)', cursor: 'not-allowed' } : {}}
                     >
                       <option value="PENDING">Chờ duyệt</option>
                       <option value="APPROVED">Đã duyệt</option>
                       <option value="REJECTED">Từ chối</option>
                     </select>
                   ) : (
-                    <input
-                      type="text"
-                      className="input"
+                    <input 
+                      type="text" 
+                      className="input" 
                       value={
-                        groupForm.approvalStatus === 'APPROVED' ? 'Đã duyệt' :
-                          groupForm.approvalStatus === 'PENDING' ? 'Chờ duyệt' : 'Từ chối'
-                      }
-                      disabled
+                        groupForm.approvalStatus === 'APPROVED' ? 'Đã duyệt' : 
+                        groupForm.approvalStatus === 'PENDING' ? 'Chờ duyệt' : 'Từ chối'
+                      } 
+                      disabled 
                       style={{ backgroundColor: 'var(--bg-hover)', color: 'var(--text-muted)', cursor: 'not-allowed' }}
                     />
+                  )}
+                  {groupForm.status === 'ACTIVE' && (
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginTop: '4px' }}>
+                      ⚠️ Cần chuyển trạng thái hoạt động về 'Ngừng hoạt động' trước khi thay đổi trạng thái phê duyệt.
+                    </span>
                   )}
                 </div>
               ) : (

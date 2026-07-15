@@ -10,6 +10,7 @@ import {
 } from "typeorm";
 import { CommodityGroup } from "./commodity-group.entity";
 import { CommodityStatus } from "../common/enums/commodity-status.enum";
+import { ApprovalStatus } from "../common/enums/approval-status.enum";
 
 @Entity("commodity_types")
 export class CommodityType {
@@ -47,9 +48,17 @@ export class CommodityType {
     @Column({
         type: "enum",
         enum: CommodityStatus,
-        default: CommodityStatus.ACTIVE,
+        default: CommodityStatus.INACTIVE,
     })
     status: CommodityStatus;
+
+    @Column({
+        name: "approval_status",
+        type: "enum",
+        enum: ApprovalStatus,
+        default: ApprovalStatus.PENDING,
+    })
+    approvalStatus: ApprovalStatus;
 
     @CreateDateColumn({
         name: "created_at",
