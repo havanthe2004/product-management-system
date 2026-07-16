@@ -13,6 +13,7 @@ import qualityStandardRouter from "./routes/quality-standard.route";
 import unitRouter from "./routes/unit.route";
 import userRouter from "./routes/user.route";
 import auditLogRouter from "./routes/audit-log.route";
+import commodityRouter from "./routes/commodity.route";
 
 const app = express();
 
@@ -38,6 +39,7 @@ app.use("/api/quality-standards", qualityStandardRouter);
 app.use("/api/units", unitRouter);
 app.use("/api/users", userRouter);
 app.use("/api/audit-logs", auditLogRouter);
+app.use("/api/commodities", commodityRouter);
 
 // Health Check API
 app.get("/health", (req, res) => {

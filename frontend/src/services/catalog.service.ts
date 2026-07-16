@@ -1,5 +1,5 @@
 import api from './api';
-import type { BaseResponse, CommodityGroup, CommodityType, Country, QualityStandard, Unit } from '../types';
+import type { BaseResponse, Commodity, CommodityGroup, CommodityType, Country, QualityStandard, Unit } from '../types';
 
 export async function getCommodityGroups(): Promise<BaseResponse<CommodityGroup[]>> {
   const res = await api.get<BaseResponse<CommodityGroup[]>>('/commodity-groups');
@@ -23,6 +23,11 @@ export async function getQualityStandards(): Promise<BaseResponse<QualityStandar
 
 export async function getUnits(): Promise<BaseResponse<Unit[]>> {
   const res = await api.get<BaseResponse<Unit[]>>('/units');
+  return res.data;
+}
+
+export async function getCommodities(): Promise<BaseResponse<Commodity[]>> {
+  const res = await api.get<BaseResponse<Commodity[]>>('/commodities');
   return res.data;
 }
 

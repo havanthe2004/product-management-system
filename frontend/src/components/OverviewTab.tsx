@@ -1,14 +1,23 @@
-import { useAppSelector } from '../store/hooks';
-import { ProductStatus } from '../store/slices/productsSlice';
+import { useState, useEffect } from 'react';
+import { getCommodities } from '../services/catalog.service';
+import type { Commodity } from '../types';
 
 export default function OverviewTab() {
-  const products = useAppSelector((state) => state.products);
+  const [list, setList] = useState<Commodity[]>([]);
+
+  useEffect(() => {
+    getCommodities()
+      .then((res) => {
+        if (res.success) setList(res.data);
+      })
+      .catch((err) => console.error(err));
+  }, []);
 
   const stats = {
-    total: products.list.length,
-    approved: products.list.filter(p => p.status === ProductStatus.APPROVED).length,
-    pending: products.list.filter(p => p.status === ProductStatus.PENDING).length,
-    rejected: products.list.filter(p => p.status === ProductStatus.REJECTED).length,
+    total: list.length,
+    approved: list.filter(p => p.approvalStatus === 'APPROVED').length,
+    pending: list.filter(p => p.approvalStatus === 'PENDING').length,
+    rejected: list.filter(p => p.approvalStatus === 'REJECTED').length,
   };
 
   return (

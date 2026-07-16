@@ -96,3 +96,24 @@ export interface AuditLog {
   newData?: any;
   createdAt: string;
 }
+
+export interface Commodity {
+  id: number;
+  commodityCode: string;
+  commodityName: string;
+  imageUrl?: string;
+  group: CommodityGroup;
+  type: CommodityType;
+  unit: Unit;
+  description?: string;
+  approvalStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'ACTIVE' | 'INACTIVE';
+  createdBy: User;
+  updatedBy: User;
+  approvedBy?: User;
+  approvedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+  countries?: Country[];
+  qualityStandards?: QualityStandard[];
+}
