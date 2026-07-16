@@ -1,21 +1,8 @@
-import { useState, useEffect } from 'react';
-import { getAuditLogs } from '../services/audit-log.service';
+interface AuditLogTableProps {
+  logs: any[];
+}
 
-export default function AuditLogsTab() {
-  const [logs, setLogs] = useState<any[]>([]);
-
-  useEffect(() => {
-    const fetchLogs = async () => {
-      try {
-        const res = await getAuditLogs();
-        if (res.success) setLogs(res.data);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchLogs();
-  }, []);
-
+export default function AuditLogTable({ logs }: AuditLogTableProps) {
   return (
     <div className="fade-in table-container">
       <table className="table">

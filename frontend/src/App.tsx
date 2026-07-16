@@ -2,19 +2,19 @@ import { useState, useEffect } from 'react';
 import { useAppSelector, useAppDispatch } from './store/hooks';
 import { getProfile } from './services/profile.service';
 import { updateUserSuccess } from './store/slices/authSlice';
-import Login from './components/Login';
-import Sidebar from './components/Sidebar';
-import Header from './components/Header';
-import OverviewTab from './components/OverviewTab';
-import ProductsTab from './components/ProductsTab';
-import CommodityGroupsTab from './components/CommodityGroupsTab';
-import CommodityTypesTab from './components/CommodityTypesTab';
-import CountriesTab from './components/CountriesTab';
-import StandardsTab from './components/StandardsTab';
-import UnitsTab from './components/UnitsTab';
-import MembersTab from './components/MembersTab';
-import AuditLogsTab from './components/AuditLogsTab';
-import ProfileTab from './components/ProfileTab';
+import LoginPage from './pages/LoginPage';
+import Sidebar from './layouts/Sidebar';
+import Header from './layouts/Header';
+import OverviewPage from './pages/OverviewPage';
+import ProductsPage from './pages/ProductsPage';
+import CommodityGroupsPage from './pages/CommodityGroupsPage';
+import CommodityTypesPage from './pages/CommodityTypesPage';
+import CountriesPage from './pages/CountriesPage';
+import StandardsPage from './pages/StandardsPage';
+import UnitsPage from './pages/UnitsPage';
+import MembersPage from './pages/MembersPage';
+import AuditLogsPage from './pages/AuditLogsPage';
+import ProfilePage from './pages/ProfilePage';
 
 import { UserRole } from './store/slices/authSlice';
 
@@ -53,7 +53,7 @@ function App() {
   }, [isDark]);
 
   if (!auth.isAuthenticated) {
-    return <Login />;
+    return <LoginPage />;
   }
 
   return (
@@ -74,52 +74,52 @@ function App() {
           
           {/* TAB 1: OVERVIEW */}
           {activeTab === 'overview' && (
-            <OverviewTab />
+            <OverviewPage />
           )}
 
           {/* TAB 2: PRODUCTS */}
           {activeTab === 'products' && (
-            <ProductsTab />
+            <ProductsPage />
           )}
 
           {/* TAB 3: COMMODITY GROUPS */}
           {activeTab === 'commodity-groups' && (
-            <CommodityGroupsTab />
+            <CommodityGroupsPage />
           )}
 
           {/* TAB 4: COMMODITY TYPES */}
           {activeTab === 'commodity-types' && (
-            <CommodityTypesTab />
+            <CommodityTypesPage />
           )}
 
           {/* TAB 5: PARTNER COUNTRIES */}
           {activeTab === 'countries' && (
-            <CountriesTab />
+            <CountriesPage />
           )}
 
           {/* TAB 6: QUALITY STANDARDS */}
           {activeTab === 'standards' && (
-            <StandardsTab />
+            <StandardsPage />
           )}
 
           {/* TAB 7: UNITS OF MEASUREMENT */}
           {activeTab === 'units' && (
-            <UnitsTab />
+            <UnitsPage />
           )}
 
           {/* TAB 8: MEMBERS MANAGEMENT */}
           {activeTab === 'members' && auth.user?.role === UserRole.ADMIN && (
-            <MembersTab />
+            <MembersPage />
           )}
 
           {/* TAB 9: AUDIT LOGS */}
           {activeTab === 'audit-logs' && auth.user?.role === UserRole.ADMIN && (
-            <AuditLogsTab />
+            <AuditLogsPage />
           )}
 
           {/* TAB 10: USER PROFILE */}
           {activeTab === 'profile' && (
-            <ProfileTab />
+            <ProfilePage />
           )}
 
         </div>

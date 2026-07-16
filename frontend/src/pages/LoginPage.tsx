@@ -5,7 +5,7 @@ import * as authService from '../services/auth.service';
 
 type Mode = 'login' | 'forgot' | 'reset';
 
-export default function Login() {
+export default function LoginPage() {
   const dispatch = useAppDispatch();
   const [mode, setMode] = useState<Mode>('login');
   const [loading, setLoading] = useState(false);
@@ -138,8 +138,6 @@ export default function Login() {
 
           </form>
         )}
-
-
 
         {mode === 'forgot' && (
           <form onSubmit={handleForgotPassword}>

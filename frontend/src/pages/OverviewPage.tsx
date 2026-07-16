@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { getCommodities } from '../services/catalog.service';
 import type { Commodity } from '../types';
 
-export default function OverviewTab() {
+export default function OverviewPage() {
   const [list, setList] = useState<Commodity[]>([]);
 
   useEffect(() => {

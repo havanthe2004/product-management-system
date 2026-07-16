@@ -3,9 +3,9 @@ import { useAppDispatch } from '../store/hooks';
 import { updateUserSuccess } from '../store/slices/authSlice';
 import { getProfile, updateProfile, changePassword } from '../services/profile.service';
 import type { User } from '../types';
-import { DEFAULT_AVATAR } from './Sidebar';
+import { DEFAULT_AVATAR } from '../layouts/Sidebar';
 
-export default function ProfileTab() {
+export default function ProfilePage() {
   const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -366,7 +366,7 @@ export default function ProfileTab() {
               <div className="form-group">
                 <label>Số điện thoại</label>
                 <input
-                  type="tel"
+                  type="text"
                   className="input"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
