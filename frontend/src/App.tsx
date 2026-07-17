@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAppSelector, useAppDispatch } from './store/hooks';
 import { getProfile } from './services/profile.service';
 import { updateUserSuccess } from './store/slices/authSlice';
 import LoginPage from './pages/LoginPage';
-import Sidebar from './layouts/Sidebar';
-import Header from './layouts/Header';
+import DashboardLayout from './layouts/DashboardLayout';
 import OverviewPage from './pages/OverviewPage';
 import ProductsPage from './pages/ProductsPage';
 import CommodityGroupsPage from './pages/CommodityGroupsPage';
@@ -17,6 +17,24 @@ import AuditLogsPage from './pages/AuditLogsPage';
 import ProfilePage from './pages/ProfilePage';
 
 import { UserRole } from './store/slices/authSlice';
+
+// Guard component for authenticated users
+const ProtectedRoute = ({ isDark, setIsDark }: { isDark: boolean; setIsDark: (dark: boolean) => void }) => {
+  const auth = useAppSelector((state) => state.auth);
+  if (!auth.isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  return <DashboardLayout isDark={isDark} setIsDark={setIsDark} />;
+};
+
+// Guard component for guest/anonymous users (redirect if already logged in)
+const AnonymousRoute = () => {
+  const auth = useAppSelector((state) => state.auth);
+  if (auth.isAuthenticated) {
+    return <Navigate to="/overview" replace />;
+  }
+  return <LoginPage />;
+};
 
 function App() {
   const dispatch = useAppDispatch();
@@ -37,9 +55,6 @@ function App() {
     }
   }, [auth.isAuthenticated, dispatch]);
 
-  // Layout Tab State
-  const [activeTab, setActiveTab] = useState<'overview' | 'products' | 'commodity-groups' | 'commodity-types' | 'countries' | 'standards' | 'units' | 'members' | 'audit-logs' | 'profile'>('overview');
-
   // Theme state
   const [isDark, setIsDark] = useState(true);
 
@@ -52,79 +67,36 @@ function App() {
     }
   }, [isDark]);
 
-  if (!auth.isAuthenticated) {
-    return <LoginPage />;
-  }
-
   return (
-    <div className="app-container">
-      {/* Sidebar Component */}
-      <Sidebar
-        activeTab={activeTab}
-        setActiveTab={setActiveTab}
-      />
+    <Routes>
+      {/* Public / Guest Routes */}
+      <Route path="/login" element={<AnonymousRoute />} />
 
-      {/* Main Content Area */}
-      <main className="main-content">
-        {/* Header Component */}
-        <Header activeTab={activeTab} isDark={isDark} setIsDark={setIsDark} />
+      {/* Authenticated/Protected Routes wrapped in Layout */}
+      <Route element={<ProtectedRoute isDark={isDark} setIsDark={setIsDark} />}>
+        <Route path="/overview" element={<OverviewPage />} />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/commodity-groups" element={<CommodityGroupsPage />} />
+        <Route path="/commodity-types" element={<CommodityTypesPage />} />
+        <Route path="/countries" element={<CountriesPage />} />
+        <Route path="/standards" element={<StandardsPage />} />
+        <Route path="/units" element={<UnitsPage />} />
+        
+        {/* Admin only routes */}
+        {auth.user?.role === UserRole.ADMIN && (
+          <>
+            <Route path="/members" element={<MembersPage />} />
+            <Route path="/audit-logs" element={<AuditLogsPage />} />
+          </>
+        )}
 
-        {/* Content Body */}
-        <div className="content-body" style={{ overflowY: 'auto' }}>
-          
-          {/* TAB 1: OVERVIEW */}
-          {activeTab === 'overview' && (
-            <OverviewPage />
-          )}
+        <Route path="/profile" element={<ProfilePage />} />
+      </Route>
 
-          {/* TAB 2: PRODUCTS */}
-          {activeTab === 'products' && (
-            <ProductsPage />
-          )}
-
-          {/* TAB 3: COMMODITY GROUPS */}
-          {activeTab === 'commodity-groups' && (
-            <CommodityGroupsPage />
-          )}
-
-          {/* TAB 4: COMMODITY TYPES */}
-          {activeTab === 'commodity-types' && (
-            <CommodityTypesPage />
-          )}
-
-          {/* TAB 5: PARTNER COUNTRIES */}
-          {activeTab === 'countries' && (
-            <CountriesPage />
-          )}
-
-          {/* TAB 6: QUALITY STANDARDS */}
-          {activeTab === 'standards' && (
-            <StandardsPage />
-          )}
-
-          {/* TAB 7: UNITS OF MEASUREMENT */}
-          {activeTab === 'units' && (
-            <UnitsPage />
-          )}
-
-          {/* TAB 8: MEMBERS MANAGEMENT */}
-          {activeTab === 'members' && auth.user?.role === UserRole.ADMIN && (
-            <MembersPage />
-          )}
-
-          {/* TAB 9: AUDIT LOGS */}
-          {activeTab === 'audit-logs' && auth.user?.role === UserRole.ADMIN && (
-            <AuditLogsPage />
-          )}
-
-          {/* TAB 10: USER PROFILE */}
-          {activeTab === 'profile' && (
-            <ProfilePage />
-          )}
-
-        </div>
-      </main>
-    </div>
+      {/* Fallback redirects */}
+      <Route path="/" element={<Navigate to="/overview" replace />} />
+      <Route path="*" element={<Navigate to="/overview" replace />} />
+    </Routes>
   );
 }
 
