@@ -21,8 +21,8 @@ export async function getQualityStandards(params?: any): Promise<BaseResponse<Qu
   return res.data;
 }
 
-export async function getUnits(): Promise<BaseResponse<Unit[]>> {
-  const res = await api.get<BaseResponse<Unit[]>>('/units');
+export async function getUnits(params?: any): Promise<BaseResponse<Unit[]>> {
+  const res = await api.get<BaseResponse<Unit[]>>('/units', { params });
   return res.data;
 }
 

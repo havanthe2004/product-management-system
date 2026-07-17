@@ -7,6 +7,7 @@ import { useUnitData } from '../hooks/useUnitData';
 import UnitTable from '../components/units/UnitTable';
 import UnitFormModal from '../components/units/UnitFormModal';
 import UnitDetailsModal from '../components/units/UnitDetailsModal';
+import UnitFilters from '../components/units/UnitFilters';
 
 export default function UnitsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,8 +18,17 @@ export default function UnitsPage() {
   const userRole = auth.user?.role;
   const isAuthorizedToApprove = userRole === 'ADMIN' || userRole === 'MANAGER';
 
-  // Custom data hook
-  const { dbUnits, fetchUnits } = useUnitData(isTrashView);
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [approvalFilter, setApprovalFilter] = useState('ALL');
+
+  // Custom data hook with backend query parameters
+  const { dbUnits, fetchUnits } = useUnitData(isTrashView, {
+    search: searchQuery,
+    status: statusFilter,
+    approvalStatus: approvalFilter
+  });
 
   const [unitForm, setUnitForm] = useState({
     id: null as any,
@@ -142,6 +152,16 @@ export default function UnitsPage() {
           )}
         </div>
       </div>
+
+      {/* Filter Component */}
+      <UnitFilters
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        approvalFilter={approvalFilter}
+        setApprovalFilter={setApprovalFilter}
+      />
 
       {/* Table Card */}
       <UnitTable
