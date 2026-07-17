@@ -7,6 +7,7 @@ import { useCountryData } from '../hooks/useCountryData';
 import CountryTable from '../components/countries/CountryTable';
 import CountryFormModal from '../components/countries/CountryFormModal';
 import CountryDetailsModal from '../components/countries/CountryDetailsModal';
+import CountryFilters from '../components/countries/CountryFilters';
 
 export default function CountriesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,8 +18,17 @@ export default function CountriesPage() {
   const userRole = auth.user?.role;
   const isAuthorizedToApprove = userRole === 'ADMIN' || userRole === 'MANAGER';
 
-  // Custom data hook
-  const { countries, fetchCountries } = useCountryData(isTrashView);
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [approvalFilter, setApprovalFilter] = useState('ALL');
+
+  // Custom data hook with backend query parameters
+  const { countries, fetchCountries } = useCountryData(isTrashView, {
+    search: searchQuery,
+    status: statusFilter,
+    approvalStatus: approvalFilter
+  });
 
   const [countryForm, setCountryForm] = useState({
     id: null as any,
@@ -139,6 +149,16 @@ export default function CountriesPage() {
           )}
         </div>
       </div>
+
+      {/* Filter Component */}
+      <CountryFilters
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        approvalFilter={approvalFilter}
+        setApprovalFilter={setApprovalFilter}
+      />
 
       {/* Table Card */}
       <CountryTable

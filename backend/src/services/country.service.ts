@@ -1,4 +1,4 @@
-import { IsNull, Not } from "typeorm";
+import { IsNull, Not, Like } from "typeorm";
 import { Country } from "../entities/country.entity";
 import { CountryRepository } from "../repositories/country.repository";
 import { CommodityStatus } from "../common/enums/commodity-status.enum";
@@ -8,17 +8,53 @@ import { CreateCountryReqDto, UpdateCountryReqDto } from "../dto/country.dto";
 export class CountryService {
     private countryRepository = CountryRepository;
 
-    async getAll(): Promise<Country[]> {
+    async getAll(filters?: { search?: string; status?: CommodityStatus; approvalStatus?: ApprovalStatus }): Promise<Country[]> {
+        const where: any = {};
+        if (filters) {
+            if (filters.status) where.status = filters.status;
+            if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
+
+            if (filters.search) {
+                const searchPattern = `%${filters.search}%`;
+                return this.countryRepository.find({
+                    where: [
+                        { ...where, countryName: Like(searchPattern) },
+                        { ...where, isoCode: Like(searchPattern) },
+                        { ...where, description: Like(searchPattern) }
+                    ],
+                    order: { createdAt: "DESC" }
+                });
+            }
+        }
         return this.countryRepository.find({
+            where,
             order: { createdAt: "DESC" }
         });
     }
 
-    async getTrash(): Promise<Country[]> {
+    async getTrash(filters?: { search?: string; status?: CommodityStatus; approvalStatus?: ApprovalStatus }): Promise<Country[]> {
+        const where: any = {
+            deletedAt: Not(IsNull())
+        };
+        if (filters) {
+            if (filters.status) where.status = filters.status;
+            if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
+
+            if (filters.search) {
+                const searchPattern = `%${filters.search}%`;
+                return this.countryRepository.find({
+                    where: [
+                        { ...where, countryName: Like(searchPattern) },
+                        { ...where, isoCode: Like(searchPattern) },
+                        { ...where, description: Like(searchPattern) }
+                    ],
+                    withDeleted: true,
+                    order: { deletedAt: "DESC" }
+                });
+            }
+        }
         return this.countryRepository.find({
-            where: {
-                deletedAt: Not(IsNull())
-            },
+            where,
             withDeleted: true,
             order: { deletedAt: "DESC" }
         });

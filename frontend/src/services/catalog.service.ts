@@ -11,8 +11,8 @@ export async function getCommodityTypes(params?: any): Promise<BaseResponse<Comm
   return res.data;
 }
 
-export async function getCountries(): Promise<BaseResponse<Country[]>> {
-  const res = await api.get<BaseResponse<Country[]>>('/countries');
+export async function getCountries(params?: any): Promise<BaseResponse<Country[]>> {
+  const res = await api.get<BaseResponse<Country[]>>('/countries', { params });
   return res.data;
 }
 

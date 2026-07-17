@@ -8,7 +8,13 @@ export class CountryController {
 
     async getAll(req: Request, res: Response): Promise<Response> {
         try {
-            const list = await countryService.getAll();
+            const { search, status, approvalStatus } = req.query;
+            const filters = {
+                search: search ? String(search) : undefined,
+                status: status ? status as any : undefined,
+                approvalStatus: approvalStatus ? approvalStatus as any : undefined
+            };
+            const list = await countryService.getAll(filters);
             return ResponseHelper.success(res, list, "Lấy danh sách quốc gia thành công!");
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
@@ -76,7 +82,13 @@ export class CountryController {
 
     async getTrash(req: Request, res: Response): Promise<Response> {
         try {
-            const list = await countryService.getTrash();
+            const { search, status, approvalStatus } = req.query;
+            const filters = {
+                search: search ? String(search) : undefined,
+                status: status ? status as any : undefined,
+                approvalStatus: approvalStatus ? approvalStatus as any : undefined
+            };
+            const list = await countryService.getTrash(filters);
             return ResponseHelper.success(res, list, "Lấy danh sách thùng rác thành công!");
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
