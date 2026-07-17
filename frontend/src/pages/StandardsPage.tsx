@@ -7,6 +7,7 @@ import { useStandardData } from '../hooks/useStandardData';
 import StandardTable from '../components/standards/StandardTable';
 import StandardFormModal from '../components/standards/StandardFormModal';
 import StandardDetailsModal from '../components/standards/StandardDetailsModal';
+import StandardFilters from '../components/standards/StandardFilters';
 
 export default function StandardsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,8 +18,17 @@ export default function StandardsPage() {
   const userRole = auth.user?.role;
   const isAuthorizedToApprove = userRole === 'ADMIN' || userRole === 'MANAGER';
 
-  // Custom data hook
-  const { standards, fetchStandards } = useStandardData(isTrashView);
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [approvalFilter, setApprovalFilter] = useState('ALL');
+
+  // Custom data hook with backend query parameters
+  const { standards, fetchStandards } = useStandardData(isTrashView, {
+    search: searchQuery,
+    status: statusFilter,
+    approvalStatus: approvalFilter
+  });
 
   const [standardForm, setStandardForm] = useState({
     id: null as any,
@@ -139,6 +149,16 @@ export default function StandardsPage() {
           )}
         </div>
       </div>
+
+      {/* Filter Component */}
+      <StandardFilters
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        approvalFilter={approvalFilter}
+        setApprovalFilter={setApprovalFilter}
+      />
 
       {/* Table Card */}
       <StandardTable

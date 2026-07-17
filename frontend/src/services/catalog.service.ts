@@ -16,8 +16,8 @@ export async function getCountries(params?: any): Promise<BaseResponse<Country[]
   return res.data;
 }
 
-export async function getQualityStandards(): Promise<BaseResponse<QualityStandard[]>> {
-  const res = await api.get<BaseResponse<QualityStandard[]>>('/quality-standards');
+export async function getQualityStandards(params?: any): Promise<BaseResponse<QualityStandard[]>> {
+  const res = await api.get<BaseResponse<QualityStandard[]>>('/quality-standards', { params });
   return res.data;
 }
 

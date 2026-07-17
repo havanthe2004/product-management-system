@@ -1,4 +1,4 @@
-import { IsNull, Not } from "typeorm";
+import { IsNull, Not, Like } from "typeorm";
 import { QualityStandard } from "../entities/quality-standard.entity";
 import { QualityStandardRepository } from "../repositories/quality-standard.repository";
 import { CommodityStatus } from "../common/enums/commodity-status.enum";
@@ -8,17 +8,53 @@ import { CreateQualityStandardReqDto, UpdateQualityStandardReqDto } from "../dto
 export class QualityStandardService {
     private standardRepository = QualityStandardRepository;
 
-    async getAll(): Promise<QualityStandard[]> {
+    async getAll(filters?: { search?: string; status?: CommodityStatus; approvalStatus?: ApprovalStatus }): Promise<QualityStandard[]> {
+        const where: any = {};
+        if (filters) {
+            if (filters.status) where.status = filters.status;
+            if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
+
+            if (filters.search) {
+                const searchPattern = `%${filters.search}%`;
+                return this.standardRepository.find({
+                    where: [
+                        { ...where, standardName: Like(searchPattern) },
+                        { ...where, standardCode: Like(searchPattern) },
+                        { ...where, description: Like(searchPattern) }
+                    ],
+                    order: { createdAt: "DESC" }
+                });
+            }
+        }
         return this.standardRepository.find({
+            where,
             order: { createdAt: "DESC" }
         });
     }
 
-    async getTrash(): Promise<QualityStandard[]> {
+    async getTrash(filters?: { search?: string; status?: CommodityStatus; approvalStatus?: ApprovalStatus }): Promise<QualityStandard[]> {
+        const where: any = {
+            deletedAt: Not(IsNull())
+        };
+        if (filters) {
+            if (filters.status) where.status = filters.status;
+            if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
+
+            if (filters.search) {
+                const searchPattern = `%${filters.search}%`;
+                return this.standardRepository.find({
+                    where: [
+                        { ...where, standardName: Like(searchPattern) },
+                        { ...where, standardCode: Like(searchPattern) },
+                        { ...where, description: Like(searchPattern) }
+                    ],
+                    withDeleted: true,
+                    order: { deletedAt: "DESC" }
+                });
+            }
+        }
         return this.standardRepository.find({
-            where: {
-                deletedAt: Not(IsNull())
-            },
+            where,
             withDeleted: true,
             order: { deletedAt: "DESC" }
         });
