@@ -1,4 +1,4 @@
-import { IsNull, Not } from "typeorm";
+import { IsNull, Not, Like } from "typeorm";
 import { CommodityType } from "../entities/commodity-type.entity";
 import { CommodityTypeRepository } from "../repositories/commodity-type.repository";
 import { CommodityGroupRepository } from "../repositories/commodity-group.repository";
@@ -10,18 +10,58 @@ export class CommodityTypeService {
     private typeRepository = CommodityTypeRepository;
     private groupRepository = CommodityGroupRepository;
 
-    async getAll(): Promise<CommodityType[]> {
+    async getAll(filters?: { search?: string; status?: CommodityStatus; approvalStatus?: ApprovalStatus; groupId?: number }): Promise<CommodityType[]> {
+        const where: any = {};
+        if (filters) {
+            if (filters.status) where.status = filters.status;
+            if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
+            if (filters.groupId) where.group = { id: filters.groupId };
+
+            if (filters.search) {
+                const searchPattern = `%${filters.search}%`;
+                return this.typeRepository.find({
+                    where: [
+                        { ...where, typeName: Like(searchPattern) },
+                        { ...where, typeCode: Like(searchPattern) },
+                        { ...where, description: Like(searchPattern) }
+                    ],
+                    relations: { group: true },
+                    order: { createdAt: "DESC" }
+                });
+            }
+        }
         return this.typeRepository.find({
+            where,
             relations: { group: true },
             order: { createdAt: "DESC" }
         });
     }
 
-    async getTrash(): Promise<CommodityType[]> {
+    async getTrash(filters?: { search?: string; status?: CommodityStatus; approvalStatus?: ApprovalStatus; groupId?: number }): Promise<CommodityType[]> {
+        const where: any = {
+            deletedAt: Not(IsNull())
+        };
+        if (filters) {
+            if (filters.status) where.status = filters.status;
+            if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
+            if (filters.groupId) where.group = { id: filters.groupId };
+
+            if (filters.search) {
+                const searchPattern = `%${filters.search}%`;
+                return this.typeRepository.find({
+                    where: [
+                        { ...where, typeName: Like(searchPattern) },
+                        { ...where, typeCode: Like(searchPattern) },
+                        { ...where, description: Like(searchPattern) }
+                    ],
+                    relations: { group: true },
+                    withDeleted: true,
+                    order: { deletedAt: "DESC" }
+                });
+            }
+        }
         return this.typeRepository.find({
-            where: {
-                deletedAt: Not(IsNull())
-            },
+            where,
             relations: { group: true },
             withDeleted: true,
             order: { deletedAt: "DESC" }

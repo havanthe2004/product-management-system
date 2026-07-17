@@ -6,8 +6,8 @@ export async function getCommodityGroups(params?: any): Promise<BaseResponse<Com
   return res.data;
 }
 
-export async function getCommodityTypes(): Promise<BaseResponse<CommodityType[]>> {
-  const res = await api.get<BaseResponse<CommodityType[]>>('/commodity-types');
+export async function getCommodityTypes(params?: any): Promise<BaseResponse<CommodityType[]>> {
+  const res = await api.get<BaseResponse<CommodityType[]>>('/commodity-types', { params });
   return res.data;
 }
 

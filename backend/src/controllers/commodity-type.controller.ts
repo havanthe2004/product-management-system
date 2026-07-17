@@ -8,7 +8,14 @@ export class CommodityTypeController {
 
     async getAll(req: Request, res: Response): Promise<Response> {
         try {
-            const list = await commodityTypeService.getAll();
+            const { search, status, approvalStatus, groupId } = req.query;
+            const filters = {
+                search: search ? String(search) : undefined,
+                status: status ? status as any : undefined,
+                approvalStatus: approvalStatus ? approvalStatus as any : undefined,
+                groupId: groupId ? Number(groupId) : undefined
+            };
+            const list = await commodityTypeService.getAll(filters);
             return ResponseHelper.success(res, list, "Lấy danh sách loại mặt hàng thành công!");
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
@@ -76,7 +83,14 @@ export class CommodityTypeController {
 
     async getTrash(req: Request, res: Response): Promise<Response> {
         try {
-            const list = await commodityTypeService.getTrash();
+            const { search, status, approvalStatus, groupId } = req.query;
+            const filters = {
+                search: search ? String(search) : undefined,
+                status: status ? status as any : undefined,
+                approvalStatus: approvalStatus ? approvalStatus as any : undefined,
+                groupId: groupId ? Number(groupId) : undefined
+            };
+            const list = await commodityTypeService.getTrash(filters);
             return ResponseHelper.success(res, list, "Lấy danh sách thùng rác thành công!");
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);

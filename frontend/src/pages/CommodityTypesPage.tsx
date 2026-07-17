@@ -7,6 +7,7 @@ import { useTypeData } from '../hooks/useTypeData';
 import TypeTable from '../components/commodity-types/TypeTable';
 import TypeFormModal from '../components/commodity-types/TypeFormModal';
 import TypeDetailsModal from '../components/commodity-types/TypeDetailsModal';
+import TypeFilters from '../components/commodity-types/TypeFilters';
 
 export default function CommodityTypesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -17,8 +18,19 @@ export default function CommodityTypesPage() {
   const userRole = auth.user?.role;
   const isAuthorizedToApprove = userRole === 'ADMIN' || userRole === 'MANAGER';
 
-  // Custom data hook
-  const { types, groups, fetchTypesAndGroups } = useTypeData(isTrashView);
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [approvalFilter, setApprovalFilter] = useState('ALL');
+  const [groupFilter, setGroupFilter] = useState('ALL');
+
+  // Custom data hook with backend query parameters
+  const { types, groups, fetchTypesAndGroups } = useTypeData(isTrashView, {
+    search: searchQuery,
+    status: statusFilter,
+    approvalStatus: approvalFilter,
+    groupId: groupFilter
+  });
 
   const [typeForm, setTypeForm] = useState({
     id: null as any,
@@ -147,6 +159,19 @@ export default function CommodityTypesPage() {
           )}
         </div>
       </div>
+
+      {/* Filter Component */}
+      <TypeFilters
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        approvalFilter={approvalFilter}
+        setApprovalFilter={setApprovalFilter}
+        groupFilter={groupFilter}
+        setGroupFilter={setGroupFilter}
+        groups={groups}
+      />
 
       {/* Table Card */}
       <TypeTable
