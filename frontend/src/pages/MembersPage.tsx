@@ -8,12 +8,22 @@ import { DEFAULT_AVATAR } from '../layouts/Sidebar';
 import MemberTable from '../components/members/MemberTable';
 import MemberFormModal from '../components/members/MemberFormModal';
 import MemberDetailsModal from '../components/members/MemberDetailsModal';
+import MemberFilters from '../components/members/MemberFilters';
 
 export default function MembersPage() {
   const auth = useAppSelector((state) => state.auth);
 
-  // Custom hook
-  const { members, fetchMembers } = useMemberData();
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [roleFilter, setRoleFilter] = useState('ALL');
+
+  // Custom hook with backend query parameters
+  const { members, fetchMembers } = useMemberData({
+    search: searchQuery,
+    status: statusFilter,
+    role: roleFilter
+  });
 
   // Modal states for User
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -113,6 +123,16 @@ export default function MembersPage() {
           ➕ Thêm thành viên
         </button>
       </div>
+
+      {/* Filter Component */}
+      <MemberFilters
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        roleFilter={roleFilter}
+        setRoleFilter={setRoleFilter}
+      />
 
       {/* Members table */}
       <MemberTable

@@ -4,6 +4,7 @@ import { UserRole } from "../common/enums/user-role.enum";
 import { CreateUserReqDto } from "../dto/user.req.dto";
 import { UserRepository } from "../repositories/user.repository";
 import bcrypt from "bcrypt";
+import { Like } from "typeorm";
 
 export class UserService {
     private userRepository = UserRepository;
@@ -41,8 +42,27 @@ export class UserService {
         return this.userRepository.save(user);
     }
 
-    async getAll(): Promise<User[]> {
+    async getAll(filters?: { search?: string; status?: UserStatus; role?: UserRole }): Promise<User[]> {
+        const where: any = {};
+        if (filters) {
+            if (filters.status) where.status = filters.status;
+            if (filters.role) where.role = filters.role;
+
+            if (filters.search) {
+                const searchPattern = `%${filters.search}%`;
+                return this.userRepository.find({
+                    where: [
+                        { ...where, fullName: Like(searchPattern) },
+                        { ...where, email: Like(searchPattern) },
+                        { ...where, phone: Like(searchPattern) },
+                        { ...where, idCardNumber: Like(searchPattern) }
+                    ],
+                    order: { createdAt: "DESC" }
+                });
+            }
+        }
         return this.userRepository.find({
+            where,
             order: { createdAt: "DESC" }
         });
     }

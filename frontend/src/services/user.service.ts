@@ -1,8 +1,8 @@
 import api from './api';
 import type { BaseResponse, User } from '../types';
 
-export async function getUsers(): Promise<BaseResponse<User[]>> {
-  const res = await api.get<BaseResponse<User[]>>('/users');
+export async function getUsers(params?: any): Promise<BaseResponse<User[]>> {
+  const res = await api.get<BaseResponse<User[]>>('/users', { params });
   return res.data;
 }
 

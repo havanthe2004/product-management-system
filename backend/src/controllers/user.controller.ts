@@ -31,7 +31,13 @@ export class UserController {
 
     async getAll(req: Request, res: Response): Promise<Response> {
         try {
-            const list = await userService.getAll();
+            const { search, status, role } = req.query;
+            const filters = {
+                search: search ? String(search) : undefined,
+                status: status ? status as any : undefined,
+                role: role ? role as any : undefined
+            };
+            const list = await userService.getAll(filters);
 
             // Map list to omit password
             const mappedList = list.map(u => ({
