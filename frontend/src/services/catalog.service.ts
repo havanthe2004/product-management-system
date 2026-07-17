@@ -55,3 +55,39 @@ export async function restoreCatalog(endpoint: string, id: number): Promise<Base
   const res = await api.post<BaseResponse<any>>(`/${endpoint}/${id}/restore`);
   return res.data;
 }
+
+export async function getDashboardStats(): Promise<BaseResponse<{
+  stats: {
+    totalCommodities: number;
+    activeCommodities: number;
+    pendingCommodities: number;
+    inactiveCommodities: number;
+    totalGroups: number;
+    totalTypes: number;
+    totalCountries: number;
+    totalStandards: number;
+  };
+  commoditiesByGroup: Array<{
+    groupId: number;
+    groupCode: string;
+    groupName: string;
+    count: number;
+  }>;
+  topCountries: Array<{
+    countryId: number;
+    countryName: string;
+    isoCode: string;
+    count: number;
+  }>;
+  topProductsByMarkets: Array<{
+    id: number;
+    commodityCode: string;
+    commodityName: string;
+    type: { typeName: string } | null;
+    group: { groupName: string } | null;
+    countries: Array<{ countryName: string }>;
+  }>;
+}>> {
+  const res = await api.get<BaseResponse<any>>('/dashboard/stats');
+  return res.data;
+}
