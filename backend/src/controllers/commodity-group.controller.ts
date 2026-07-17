@@ -8,7 +8,13 @@ export class CommodityGroupController {
 
     async getAll(req: Request, res: Response): Promise<Response> {
         try {
-            const list = await commodityGroupService.getAll();
+            const { search, status, approvalStatus } = req.query;
+            const filters = {
+                search: search ? String(search) : undefined,
+                status: status ? status as any : undefined,
+                approvalStatus: approvalStatus ? approvalStatus as any : undefined
+            };
+            const list = await commodityGroupService.getAll(filters);
             return ResponseHelper.success(res, list, "Lấy danh sách nhóm mặt hàng thành công!");
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
@@ -76,7 +82,13 @@ export class CommodityGroupController {
 
     async getTrash(req: Request, res: Response): Promise<Response> {
         try {
-            const list = await commodityGroupService.getTrash();
+            const { search, status, approvalStatus } = req.query;
+            const filters = {
+                search: search ? String(search) : undefined,
+                status: status ? status as any : undefined,
+                approvalStatus: approvalStatus ? approvalStatus as any : undefined
+            };
+            const list = await commodityGroupService.getTrash(filters);
             return ResponseHelper.success(res, list, "Lấy danh sách thùng rác thành công!");
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);

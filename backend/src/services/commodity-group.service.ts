@@ -1,4 +1,4 @@
-import { IsNull, Not } from "typeorm";
+import { IsNull, Not, Like } from "typeorm";
 import { CommodityGroup } from "../entities/commodity-group.entity";
 import { CommodityGroupRepository } from "../repositories/commodity-group.repository";
 import { CommodityStatus } from "../common/enums/commodity-status.enum";
@@ -7,17 +7,53 @@ import { ApprovalStatus } from "../common/enums/approval-status.enum";
 export class CommodityGroupService {
     private groupRepository = CommodityGroupRepository;
 
-    async getAll(): Promise<CommodityGroup[]> {
+    async getAll(filters?: { search?: string; status?: CommodityStatus; approvalStatus?: ApprovalStatus }): Promise<CommodityGroup[]> {
+        const where: any = {};
+        if (filters) {
+            if (filters.status) where.status = filters.status;
+            if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
+
+            if (filters.search) {
+                const searchPattern = `%${filters.search}%`;
+                return this.groupRepository.find({
+                    where: [
+                        { ...where, groupName: Like(searchPattern) },
+                        { ...where, groupCode: Like(searchPattern) },
+                        { ...where, description: Like(searchPattern) }
+                    ],
+                    order: { createdAt: "DESC" }
+                });
+            }
+        }
         return this.groupRepository.find({
+            where,
             order: { createdAt: "DESC" }
         });
     }
 
-    async getTrash(): Promise<CommodityGroup[]> {
+    async getTrash(filters?: { search?: string; status?: CommodityStatus; approvalStatus?: ApprovalStatus }): Promise<CommodityGroup[]> {
+        const where: any = {
+            deletedAt: Not(IsNull())
+        };
+        if (filters) {
+            if (filters.status) where.status = filters.status;
+            if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
+
+            if (filters.search) {
+                const searchPattern = `%${filters.search}%`;
+                return this.groupRepository.find({
+                    where: [
+                        { ...where, groupName: Like(searchPattern) },
+                        { ...where, groupCode: Like(searchPattern) },
+                        { ...where, description: Like(searchPattern) }
+                    ],
+                    withDeleted: true,
+                    order: { deletedAt: "DESC" }
+                });
+            }
+        }
         return this.groupRepository.find({
-            where: {
-                deletedAt: Not(IsNull())
-            },
+            where,
             withDeleted: true,
             order: { deletedAt: "DESC" }
         });

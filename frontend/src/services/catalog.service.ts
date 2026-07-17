@@ -1,8 +1,8 @@
 import api from './api';
 import type { BaseResponse, Commodity, CommodityGroup, CommodityType, Country, QualityStandard, Unit } from '../types';
 
-export async function getCommodityGroups(): Promise<BaseResponse<CommodityGroup[]>> {
-  const res = await api.get<BaseResponse<CommodityGroup[]>>('/commodity-groups');
+export async function getCommodityGroups(params?: any): Promise<BaseResponse<CommodityGroup[]>> {
+  const res = await api.get<BaseResponse<CommodityGroup[]>>('/commodity-groups', { params });
   return res.data;
 }
 
@@ -46,8 +46,8 @@ export async function deleteCatalog(endpoint: string, id: number): Promise<BaseR
   return res.data;
 }
 
-export async function getTrashCatalog(endpoint: string): Promise<BaseResponse<any[]>> {
-  const res = await api.get<BaseResponse<any[]>>(`/${endpoint}/trash`);
+export async function getTrashCatalog(endpoint: string, params?: any): Promise<BaseResponse<any[]>> {
+  const res = await api.get<BaseResponse<any[]>>(`/${endpoint}/trash`, { params });
   return res.data;
 }
 

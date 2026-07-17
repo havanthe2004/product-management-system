@@ -7,18 +7,28 @@ import { useGroupData } from '../hooks/useGroupData';
 import GroupTable from '../components/commodity-groups/GroupTable';
 import GroupFormModal from '../components/commodity-groups/GroupFormModal';
 import GroupDetailsModal from '../components/commodity-groups/GroupDetailsModal';
+import GroupFilters from '../components/commodity-groups/GroupFilters';
 
 export default function CommodityGroupsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTrashView, setIsTrashView] = useState(false);
   const [viewingGroup, setViewingGroup] = useState<any | null>(null);
 
+  // Filter states
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [approvalFilter, setApprovalFilter] = useState('ALL');
+
   const auth = useAppSelector((state) => state.auth);
   const userRole = auth.user?.role;
   const isAuthorizedToApprove = userRole === 'ADMIN' || userRole === 'MANAGER';
 
-  // Custom data hook
-  const { groups, fetchGroups } = useGroupData(isTrashView);
+  // Custom data hook with backend query parameters
+  const { groups, fetchGroups } = useGroupData(isTrashView, {
+    search: searchQuery,
+    status: statusFilter,
+    approvalStatus: approvalFilter
+  });
 
   const [groupForm, setGroupForm] = useState({
     id: null as any,
@@ -139,6 +149,16 @@ export default function CommodityGroupsPage() {
           )}
         </div>
       </div>
+
+      {/* Filter Component */}
+      <GroupFilters
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        approvalFilter={approvalFilter}
+        setApprovalFilter={setApprovalFilter}
+      />
 
       {/* Table Card */}
       <GroupTable
