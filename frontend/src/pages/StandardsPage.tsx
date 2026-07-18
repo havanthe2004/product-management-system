@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppSelector } from '../store/hooks';
 import { saveCatalog, deleteCatalog, restoreCatalog } from '../services/catalog.service';
 import { useStandardData } from '../hooks/useStandardData';
+import { useSearchParams } from 'react-router-dom';
 
 // Import split components
 import StandardTable from '../components/standards/StandardTable';
 import StandardFormModal from '../components/standards/StandardFormModal';
 import StandardDetailsModal from '../components/standards/StandardDetailsModal';
 import StandardFilters from '../components/standards/StandardFilters';
+import Pagination from '../components/common/Pagination';
 
 export default function StandardsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,12 +25,42 @@ export default function StandardsPage() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [approvalFilter, setApprovalFilter] = useState('ALL');
 
+  // Pagination states from URL query params
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = Number(searchParams.get('page') || '1');
+  const pageSize = Number(searchParams.get('pageSize') || '10');
+
   // Custom data hook with backend query parameters
-  const { standards, fetchStandards } = useStandardData(isTrashView, {
+  const { standards, totalItems, fetchStandards } = useStandardData(isTrashView, {
     search: searchQuery,
     status: statusFilter,
-    approvalStatus: approvalFilter
+    approvalStatus: approvalFilter,
+    page: currentPage,
+    limit: pageSize
   });
+
+  // Reset page when filters change (skip initial render to persist F5)
+  const prevFilters = useRef({ searchQuery, statusFilter, approvalFilter, isTrashView });
+  useEffect(() => {
+    const filtersChanged =
+      prevFilters.current.searchQuery !== searchQuery ||
+      prevFilters.current.statusFilter !== statusFilter ||
+      prevFilters.current.approvalFilter !== approvalFilter ||
+      prevFilters.current.isTrashView !== isTrashView;
+
+    prevFilters.current = { searchQuery, statusFilter, approvalFilter, isTrashView };
+
+    if (!filtersChanged) return;
+
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('page', '1');
+      return next;
+    }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, statusFilter, approvalFilter, isTrashView]);
+
+  const totalPages = Math.ceil(totalItems / pageSize);
 
   const [standardForm, setStandardForm] = useState({
     id: null as any,
@@ -171,6 +203,29 @@ export default function StandardsPage() {
         onReject={handleReject}
         isTrashView={isTrashView}
         isAuthorizedToApprove={isAuthorizedToApprove}
+      />
+
+      {/* Pagination Controls */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={(page) => {
+          setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('page', page.toString());
+            return next;
+          });
+        }}
+        onPageSizeChange={(size) => {
+          setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('page', '1');
+            next.set('pageSize', size.toString());
+            return next;
+          });
+        }}
       />
 
       {/* Modal for Add / Edit */}

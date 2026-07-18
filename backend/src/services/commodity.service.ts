@@ -1,4 +1,4 @@
-import { IsNull, Not, In } from "typeorm";
+import { IsNull, Not, In, Like } from "typeorm";
 import { Commodity } from "../entities/commodity.entity";
 import { CommodityRepository } from "../repositories/commodity.repository";
 import { CommodityGroupRepository } from "../repositories/commodity-group.repository";
@@ -20,40 +20,197 @@ export class CommodityService {
     private countryRepository = CountryRepository;
     private qualityStandardRepository = QualityStandardRepository;
 
-    async getAll(): Promise<Commodity[]> {
-        return this.commodityRepository.find({
-            relations: {
-                group: true,
-                type: true,
-                unit: true,
-                countries: true,
-                qualityStandards: true,
-                createdBy: true,
-                updatedBy: true,
-                approvedBy: true
-            },
-            order: { createdAt: "DESC" }
-        });
+    async getAll(filters?: {
+        search?: string;
+        status?: CommodityStatus;
+        approvalStatus?: CommodityApprovalStatus;
+        groupId?: number;
+        typeId?: number;
+        page?: number;
+        limit?: number;
+    }): Promise<Commodity[] | { items: Commodity[]; total: number }> {
+        const where: any = {};
+        if (filters) {
+            if (filters.status) where.status = filters.status;
+            if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
+            if (filters.groupId) where.group = { id: filters.groupId };
+            if (filters.typeId) where.type = { id: filters.typeId };
+        }
+
+        const buildFindOptions = () => {
+            const options: any = {
+                relations: {
+                    group: true,
+                    type: true,
+                    unit: true,
+                    countries: true,
+                    qualityStandards: true,
+                    createdBy: true,
+                    updatedBy: true,
+                    approvedBy: true
+                },
+                order: { createdAt: "DESC" }
+            };
+            if (filters?.page && filters?.limit) {
+                options.skip = (filters.page - 1) * filters.limit;
+                options.take = filters.limit;
+            }
+            return options;
+        };
+
+        if (filters?.search) {
+            const searchPattern = `%${filters.search}%`;
+            const conditions = [
+                { ...where, commodityName: Like(searchPattern) },
+                { ...where, commodityCode: Like(searchPattern) },
+                { ...where, description: Like(searchPattern) }
+            ];
+
+            if (filters?.page && filters?.limit) {
+                const [items, total] = await this.commodityRepository.findAndCount({
+                    where: conditions,
+                    ...buildFindOptions()
+                });
+                return { items, total };
+            } else {
+                return this.commodityRepository.find({
+                    where: conditions,
+                    relations: {
+                        group: true,
+                        type: true,
+                        unit: true,
+                        countries: true,
+                        qualityStandards: true,
+                        createdBy: true,
+                        updatedBy: true,
+                        approvedBy: true
+                    },
+                    order: { createdAt: "DESC" }
+                });
+            }
+        }
+
+        if (filters?.page && filters?.limit) {
+            const [items, total] = await this.commodityRepository.findAndCount({
+                where,
+                ...buildFindOptions()
+            });
+            return { items, total };
+        } else {
+            return this.commodityRepository.find({
+                where,
+                relations: {
+                    group: true,
+                    type: true,
+                    unit: true,
+                    countries: true,
+                    qualityStandards: true,
+                    createdBy: true,
+                    updatedBy: true,
+                    approvedBy: true
+                },
+                order: { createdAt: "DESC" }
+            });
+        }
     }
 
-    async getTrash(): Promise<Commodity[]> {
-        return this.commodityRepository.find({
-            where: {
-                deletedAt: Not(IsNull())
-            },
-            relations: {
-                group: true,
-                type: true,
-                unit: true,
-                countries: true,
-                qualityStandards: true,
-                createdBy: true,
-                updatedBy: true,
-                approvedBy: true
-            },
-            withDeleted: true,
-            order: { deletedAt: "DESC" }
-        });
+    async getTrash(filters?: {
+        search?: string;
+        status?: CommodityStatus;
+        approvalStatus?: CommodityApprovalStatus;
+        groupId?: number;
+        typeId?: number;
+        page?: number;
+        limit?: number;
+    }): Promise<Commodity[] | { items: Commodity[]; total: number }> {
+        const where: any = {
+            deletedAt: Not(IsNull())
+        };
+        if (filters) {
+            if (filters.status) where.status = filters.status;
+            if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
+            if (filters.groupId) where.group = { id: filters.groupId };
+            if (filters.typeId) where.type = { id: filters.typeId };
+        }
+
+        const buildFindOptions = () => {
+            const options: any = {
+                relations: {
+                    group: true,
+                    type: true,
+                    unit: true,
+                    countries: true,
+                    qualityStandards: true,
+                    createdBy: true,
+                    updatedBy: true,
+                    approvedBy: true
+                },
+                withDeleted: true,
+                order: { deletedAt: "DESC" }
+            };
+            if (filters?.page && filters?.limit) {
+                options.skip = (filters.page - 1) * filters.limit;
+                options.take = filters.limit;
+            }
+            return options;
+        };
+
+        if (filters?.search) {
+            const searchPattern = `%${filters.search}%`;
+            const conditions = [
+                { ...where, commodityName: Like(searchPattern) },
+                { ...where, commodityCode: Like(searchPattern) },
+                { ...where, description: Like(searchPattern) }
+            ];
+
+            if (filters?.page && filters?.limit) {
+                const [items, total] = await this.commodityRepository.findAndCount({
+                    where: conditions,
+                    ...buildFindOptions()
+                });
+                return { items, total };
+            } else {
+                return this.commodityRepository.find({
+                    where: conditions,
+                    relations: {
+                        group: true,
+                        type: true,
+                        unit: true,
+                        countries: true,
+                        qualityStandards: true,
+                        createdBy: true,
+                        updatedBy: true,
+                        approvedBy: true
+                    },
+                    withDeleted: true,
+                    order: { deletedAt: "DESC" }
+                });
+            }
+        }
+
+        if (filters?.page && filters?.limit) {
+            const [items, total] = await this.commodityRepository.findAndCount({
+                where,
+                ...buildFindOptions()
+            });
+            return { items, total };
+        } else {
+            return this.commodityRepository.find({
+                where,
+                relations: {
+                    group: true,
+                    type: true,
+                    unit: true,
+                    countries: true,
+                    qualityStandards: true,
+                    createdBy: true,
+                    updatedBy: true,
+                    approvedBy: true
+                },
+                withDeleted: true,
+                order: { deletedAt: "DESC" }
+            });
+        }
     }
 
     async create(dto: CreateCommodityReqDto, creatorId: number): Promise<Commodity> {

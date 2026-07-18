@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppSelector } from '../store/hooks';
 import { saveCatalog, deleteCatalog, restoreCatalog } from '../services/catalog.service';
 import { useGroupData } from '../hooks/useGroupData';
+import { useSearchParams } from 'react-router-dom';
 
 // Import split components
 import GroupTable from '../components/commodity-groups/GroupTable';
 import GroupFormModal from '../components/commodity-groups/GroupFormModal';
 import GroupDetailsModal from '../components/commodity-groups/GroupDetailsModal';
 import GroupFilters from '../components/commodity-groups/GroupFilters';
+import Pagination from '../components/common/Pagination';
 
 export default function CommodityGroupsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,12 +25,42 @@ export default function CommodityGroupsPage() {
   const userRole = auth.user?.role;
   const isAuthorizedToApprove = userRole === 'ADMIN' || userRole === 'MANAGER';
 
+  // Pagination states from URL query params
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = Number(searchParams.get('page') || '1');
+  const pageSize = Number(searchParams.get('pageSize') || '10');
+
   // Custom data hook with backend query parameters
-  const { groups, fetchGroups } = useGroupData(isTrashView, {
+  const { groups, totalItems, fetchGroups } = useGroupData(isTrashView, {
     search: searchQuery,
     status: statusFilter,
-    approvalStatus: approvalFilter
+    approvalStatus: approvalFilter,
+    page: currentPage,
+    limit: pageSize
   });
+
+  // Reset page when filters change (skip initial render to persist F5)
+  const prevFilters = useRef({ searchQuery, statusFilter, approvalFilter, isTrashView });
+  useEffect(() => {
+    const filtersChanged =
+      prevFilters.current.searchQuery !== searchQuery ||
+      prevFilters.current.statusFilter !== statusFilter ||
+      prevFilters.current.approvalFilter !== approvalFilter ||
+      prevFilters.current.isTrashView !== isTrashView;
+
+    prevFilters.current = { searchQuery, statusFilter, approvalFilter, isTrashView };
+
+    if (!filtersChanged) return;
+
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('page', '1');
+      return next;
+    }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, statusFilter, approvalFilter, isTrashView]);
+
+  const totalPages = Math.ceil(totalItems / pageSize);
 
   const [groupForm, setGroupForm] = useState({
     id: null as any,
@@ -171,6 +203,29 @@ export default function CommodityGroupsPage() {
         onReject={handleReject}
         isTrashView={isTrashView}
         isAuthorizedToApprove={isAuthorizedToApprove}
+      />
+
+      {/* Pagination Controls */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={(page) => {
+          setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('page', page.toString());
+            return next;
+          });
+        }}
+        onPageSizeChange={(size) => {
+          setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('page', '1');
+            next.set('pageSize', size.toString());
+            return next;
+          });
+        }}
       />
 
       {/* Modal for Add / Edit */}

@@ -26,8 +26,8 @@ export async function getUnits(params?: any): Promise<BaseResponse<Unit[]>> {
   return res.data;
 }
 
-export async function getCommodities(): Promise<BaseResponse<Commodity[]>> {
-  const res = await api.get<BaseResponse<Commodity[]>>('/commodities');
+export async function getCommodities(params?: any): Promise<BaseResponse<Commodity[]>> {
+  const res = await api.get<BaseResponse<Commodity[]>>('/commodities', { params });
   return res.data;
 }
 

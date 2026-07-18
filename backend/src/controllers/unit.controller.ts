@@ -8,11 +8,13 @@ export class UnitController {
 
     async getAll(req: Request, res: Response): Promise<Response> {
         try {
-            const { search, status, approvalStatus } = req.query;
+            const { search, status, approvalStatus, page, limit } = req.query;
             const filters = {
                 search: search ? String(search) : undefined,
                 status: status ? status as any : undefined,
-                approvalStatus: approvalStatus ? approvalStatus as any : undefined
+                approvalStatus: approvalStatus ? approvalStatus as any : undefined,
+                page: page ? Number(page) : undefined,
+                limit: limit ? Number(limit) : undefined
             };
             const list = await unitService.getAll(filters);
             return ResponseHelper.success(res, list, "Lấy danh sách đơn vị đo lường thành công!");
@@ -82,11 +84,13 @@ export class UnitController {
 
     async getTrash(req: Request, res: Response): Promise<Response> {
         try {
-            const { search, status, approvalStatus } = req.query;
+            const { search, status, approvalStatus, page, limit } = req.query;
             const filters = {
                 search: search ? String(search) : undefined,
                 status: status ? status as any : undefined,
-                approvalStatus: approvalStatus ? approvalStatus as any : undefined
+                approvalStatus: approvalStatus ? approvalStatus as any : undefined,
+                page: page ? Number(page) : undefined,
+                limit: limit ? Number(limit) : undefined
             };
             const list = await unitService.getTrash(filters);
             return ResponseHelper.success(res, list, "Lấy danh sách thùng rác thành công!");

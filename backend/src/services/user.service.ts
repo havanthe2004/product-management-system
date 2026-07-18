@@ -42,29 +42,65 @@ export class UserService {
         return this.userRepository.save(user);
     }
 
-    async getAll(filters?: { search?: string; status?: UserStatus; role?: UserRole }): Promise<User[]> {
+    async getAll(filters?: {
+        search?: string;
+        status?: UserStatus;
+        role?: UserRole;
+        page?: number;
+        limit?: number;
+    }): Promise<User[] | { items: User[]; total: number }> {
         const where: any = {};
         if (filters) {
             if (filters.status) where.status = filters.status;
             if (filters.role) where.role = filters.role;
+        }
 
-            if (filters.search) {
-                const searchPattern = `%${filters.search}%`;
+        const buildFindOptions = () => {
+            const options: any = {
+                order: { createdAt: "DESC" }
+            };
+            if (filters?.page && filters?.limit) {
+                options.skip = (filters.page - 1) * filters.limit;
+                options.take = filters.limit;
+            }
+            return options;
+        };
+
+        if (filters?.search) {
+            const searchPattern = `%${filters.search}%`;
+            const conditions = [
+                { ...where, fullName: Like(searchPattern) },
+                { ...where, email: Like(searchPattern) },
+                { ...where, phone: Like(searchPattern) },
+                { ...where, idCardNumber: Like(searchPattern) }
+            ];
+
+            if (filters?.page && filters?.limit) {
+                const [items, total] = await this.userRepository.findAndCount({
+                    where: conditions,
+                    ...buildFindOptions()
+                });
+                return { items, total };
+            } else {
                 return this.userRepository.find({
-                    where: [
-                        { ...where, fullName: Like(searchPattern) },
-                        { ...where, email: Like(searchPattern) },
-                        { ...where, phone: Like(searchPattern) },
-                        { ...where, idCardNumber: Like(searchPattern) }
-                    ],
+                    where: conditions,
                     order: { createdAt: "DESC" }
                 });
             }
         }
-        return this.userRepository.find({
-            where,
-            order: { createdAt: "DESC" }
-        });
+
+        if (filters?.page && filters?.limit) {
+            const [items, total] = await this.userRepository.findAndCount({
+                where,
+                ...buildFindOptions()
+            });
+            return { items, total };
+        } else {
+            return this.userRepository.find({
+                where,
+                order: { createdAt: "DESC" }
+            });
+        }
     }
 
     async updateRole(id: number, roleName: string): Promise<{ saved: User; oldData: { email: string; role?: UserRole } }> {

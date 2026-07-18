@@ -7,56 +7,129 @@ import { ApprovalStatus } from "../common/enums/approval-status.enum";
 export class CommodityGroupService {
     private groupRepository = CommodityGroupRepository;
 
-    async getAll(filters?: { search?: string; status?: CommodityStatus; approvalStatus?: ApprovalStatus }): Promise<CommodityGroup[]> {
+    async getAll(filters?: {
+        search?: string;
+        status?: CommodityStatus;
+        approvalStatus?: ApprovalStatus;
+        page?: number;
+        limit?: number;
+    }): Promise<CommodityGroup[] | { items: CommodityGroup[]; total: number }> {
         const where: any = {};
         if (filters) {
             if (filters.status) where.status = filters.status;
             if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
+        }
 
-            if (filters.search) {
-                const searchPattern = `%${filters.search}%`;
+        const buildFindOptions = () => {
+            const options: any = {
+                order: { createdAt: "DESC" }
+            };
+            if (filters?.page && filters?.limit) {
+                options.skip = (filters.page - 1) * filters.limit;
+                options.take = filters.limit;
+            }
+            return options;
+        };
+
+        if (filters?.search) {
+            const searchPattern = `%${filters.search}%`;
+            const conditions = [
+                { ...where, groupName: Like(searchPattern) },
+                { ...where, groupCode: Like(searchPattern) },
+                { ...where, description: Like(searchPattern) }
+            ];
+
+            if (filters?.page && filters?.limit) {
+                const [items, total] = await this.groupRepository.findAndCount({
+                    where: conditions,
+                    ...buildFindOptions()
+                });
+                return { items, total };
+            } else {
                 return this.groupRepository.find({
-                    where: [
-                        { ...where, groupName: Like(searchPattern) },
-                        { ...where, groupCode: Like(searchPattern) },
-                        { ...where, description: Like(searchPattern) }
-                    ],
+                    where: conditions,
                     order: { createdAt: "DESC" }
                 });
             }
         }
-        return this.groupRepository.find({
-            where,
-            order: { createdAt: "DESC" }
-        });
+
+        if (filters?.page && filters?.limit) {
+            const [items, total] = await this.groupRepository.findAndCount({
+                where,
+                ...buildFindOptions()
+            });
+            return { items, total };
+        } else {
+            return this.groupRepository.find({
+                where,
+                order: { createdAt: "DESC" }
+            });
+        }
     }
 
-    async getTrash(filters?: { search?: string; status?: CommodityStatus; approvalStatus?: ApprovalStatus }): Promise<CommodityGroup[]> {
+    async getTrash(filters?: {
+        search?: string;
+        status?: CommodityStatus;
+        approvalStatus?: ApprovalStatus;
+        page?: number;
+        limit?: number;
+    }): Promise<CommodityGroup[] | { items: CommodityGroup[]; total: number }> {
         const where: any = {
             deletedAt: Not(IsNull())
         };
         if (filters) {
             if (filters.status) where.status = filters.status;
             if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
+        }
 
-            if (filters.search) {
-                const searchPattern = `%${filters.search}%`;
+        const buildFindOptions = () => {
+            const options: any = {
+                withDeleted: true,
+                order: { deletedAt: "DESC" }
+            };
+            if (filters?.page && filters?.limit) {
+                options.skip = (filters.page - 1) * filters.limit;
+                options.take = filters.limit;
+            }
+            return options;
+        };
+
+        if (filters?.search) {
+            const searchPattern = `%${filters.search}%`;
+            const conditions = [
+                { ...where, groupName: Like(searchPattern) },
+                { ...where, groupCode: Like(searchPattern) },
+                { ...where, description: Like(searchPattern) }
+            ];
+
+            if (filters?.page && filters?.limit) {
+                const [items, total] = await this.groupRepository.findAndCount({
+                    where: conditions,
+                    ...buildFindOptions()
+                });
+                return { items, total };
+            } else {
                 return this.groupRepository.find({
-                    where: [
-                        { ...where, groupName: Like(searchPattern) },
-                        { ...where, groupCode: Like(searchPattern) },
-                        { ...where, description: Like(searchPattern) }
-                    ],
+                    where: conditions,
                     withDeleted: true,
                     order: { deletedAt: "DESC" }
                 });
             }
         }
-        return this.groupRepository.find({
-            where,
-            withDeleted: true,
-            order: { deletedAt: "DESC" }
-        });
+
+        if (filters?.page && filters?.limit) {
+            const [items, total] = await this.groupRepository.findAndCount({
+                where,
+                ...buildFindOptions()
+            });
+            return { items, total };
+        } else {
+            return this.groupRepository.find({
+                where,
+                withDeleted: true,
+                order: { deletedAt: "DESC" }
+            });
+        }
     }
 
     async create(dto: { groupCode: string; groupName: string; description?: string }): Promise<CommodityGroup> {

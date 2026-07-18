@@ -49,8 +49,18 @@ export class CommodityController {
 
     async getAll(req: Request, res: Response): Promise<Response> {
         try {
-            const list = await commodityService.getAll();
-            return ResponseHelper.success(res, list, "Lấy danh sách mặt hàng thành công!");
+            const { search, status, approvalStatus, groupId, typeId, page, limit } = req.query;
+            const filters = {
+                search: search ? String(search) : undefined,
+                status: status ? status as any : undefined,
+                approvalStatus: approvalStatus ? approvalStatus as any : undefined,
+                groupId: groupId ? Number(groupId) : undefined,
+                typeId: typeId ? Number(typeId) : undefined,
+                page: page ? Number(page) : undefined,
+                limit: limit ? Number(limit) : undefined
+            };
+            const result = await commodityService.getAll(filters);
+            return ResponseHelper.success(res, result, "Lấy danh sách mặt hàng thành công!");
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
         }
@@ -58,8 +68,18 @@ export class CommodityController {
 
     async getTrash(req: Request, res: Response): Promise<Response> {
         try {
-            const list = await commodityService.getTrash();
-            return ResponseHelper.success(res, list, "Lấy danh sách thùng rác thành công!");
+            const { search, status, approvalStatus, groupId, typeId, page, limit } = req.query;
+            const filters = {
+                search: search ? String(search) : undefined,
+                status: status ? status as any : undefined,
+                approvalStatus: approvalStatus ? approvalStatus as any : undefined,
+                groupId: groupId ? Number(groupId) : undefined,
+                typeId: typeId ? Number(typeId) : undefined,
+                page: page ? Number(page) : undefined,
+                limit: limit ? Number(limit) : undefined
+            };
+            const result = await commodityService.getTrash(filters);
+            return ResponseHelper.success(res, result, "Lấy danh sách thùng rác thành công!");
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
         }
@@ -108,7 +128,7 @@ export class CommodityController {
             const dto = { ...req.body };
 
             // Fetch current commodity to know code or handle image deletion
-            const list = await commodityService.getAll();
+            const list = await commodityService.getAll() as any[];
             const commodity = list.find(c => Number(c.id) === id);
             if (!commodity) {
                 return ResponseHelper.error(res, "Không tìm thấy mặt hàng cần cập nhật.", null, 404);

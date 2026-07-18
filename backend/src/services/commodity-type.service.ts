@@ -10,34 +10,79 @@ export class CommodityTypeService {
     private typeRepository = CommodityTypeRepository;
     private groupRepository = CommodityGroupRepository;
 
-    async getAll(filters?: { search?: string; status?: CommodityStatus; approvalStatus?: ApprovalStatus; groupId?: number }): Promise<CommodityType[]> {
+    async getAll(filters?: {
+        search?: string;
+        status?: CommodityStatus;
+        approvalStatus?: ApprovalStatus;
+        groupId?: number;
+        page?: number;
+        limit?: number;
+    }): Promise<CommodityType[] | { items: CommodityType[]; total: number }> {
         const where: any = {};
         if (filters) {
             if (filters.status) where.status = filters.status;
             if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
             if (filters.groupId) where.group = { id: filters.groupId };
+        }
 
-            if (filters.search) {
-                const searchPattern = `%${filters.search}%`;
+        const buildFindOptions = () => {
+            const options: any = {
+                relations: { group: true },
+                order: { createdAt: "DESC" }
+            };
+            if (filters?.page && filters?.limit) {
+                options.skip = (filters.page - 1) * filters.limit;
+                options.take = filters.limit;
+            }
+            return options;
+        };
+
+        if (filters?.search) {
+            const searchPattern = `%${filters.search}%`;
+            const conditions = [
+                { ...where, typeName: Like(searchPattern) },
+                { ...where, typeCode: Like(searchPattern) },
+                { ...where, description: Like(searchPattern) }
+            ];
+
+            if (filters?.page && filters?.limit) {
+                const [items, total] = await this.typeRepository.findAndCount({
+                    where: conditions,
+                    ...buildFindOptions()
+                });
+                return { items, total };
+            } else {
                 return this.typeRepository.find({
-                    where: [
-                        { ...where, typeName: Like(searchPattern) },
-                        { ...where, typeCode: Like(searchPattern) },
-                        { ...where, description: Like(searchPattern) }
-                    ],
+                    where: conditions,
                     relations: { group: true },
                     order: { createdAt: "DESC" }
                 });
             }
         }
-        return this.typeRepository.find({
-            where,
-            relations: { group: true },
-            order: { createdAt: "DESC" }
-        });
+
+        if (filters?.page && filters?.limit) {
+            const [items, total] = await this.typeRepository.findAndCount({
+                where,
+                ...buildFindOptions()
+            });
+            return { items, total };
+        } else {
+            return this.typeRepository.find({
+                where,
+                relations: { group: true },
+                order: { createdAt: "DESC" }
+            });
+        }
     }
 
-    async getTrash(filters?: { search?: string; status?: CommodityStatus; approvalStatus?: ApprovalStatus; groupId?: number }): Promise<CommodityType[]> {
+    async getTrash(filters?: {
+        search?: string;
+        status?: CommodityStatus;
+        approvalStatus?: ApprovalStatus;
+        groupId?: number;
+        page?: number;
+        limit?: number;
+    }): Promise<CommodityType[] | { items: CommodityType[]; total: number }> {
         const where: any = {
             deletedAt: Not(IsNull())
         };
@@ -45,27 +90,59 @@ export class CommodityTypeService {
             if (filters.status) where.status = filters.status;
             if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
             if (filters.groupId) where.group = { id: filters.groupId };
+        }
 
-            if (filters.search) {
-                const searchPattern = `%${filters.search}%`;
+        const buildFindOptions = () => {
+            const options: any = {
+                relations: { group: true },
+                withDeleted: true,
+                order: { deletedAt: "DESC" }
+            };
+            if (filters?.page && filters?.limit) {
+                options.skip = (filters.page - 1) * filters.limit;
+                options.take = filters.limit;
+            }
+            return options;
+        };
+
+        if (filters?.search) {
+            const searchPattern = `%${filters.search}%`;
+            const conditions = [
+                { ...where, typeName: Like(searchPattern) },
+                { ...where, typeCode: Like(searchPattern) },
+                { ...where, description: Like(searchPattern) }
+            ];
+
+            if (filters?.page && filters?.limit) {
+                const [items, total] = await this.typeRepository.findAndCount({
+                    where: conditions,
+                    ...buildFindOptions()
+                });
+                return { items, total };
+            } else {
                 return this.typeRepository.find({
-                    where: [
-                        { ...where, typeName: Like(searchPattern) },
-                        { ...where, typeCode: Like(searchPattern) },
-                        { ...where, description: Like(searchPattern) }
-                    ],
+                    where: conditions,
                     relations: { group: true },
                     withDeleted: true,
                     order: { deletedAt: "DESC" }
                 });
             }
         }
-        return this.typeRepository.find({
-            where,
-            relations: { group: true },
-            withDeleted: true,
-            order: { deletedAt: "DESC" }
-        });
+
+        if (filters?.page && filters?.limit) {
+            const [items, total] = await this.typeRepository.findAndCount({
+                where,
+                ...buildFindOptions()
+            });
+            return { items, total };
+        } else {
+            return this.typeRepository.find({
+                where,
+                relations: { group: true },
+                withDeleted: true,
+                order: { deletedAt: "DESC" }
+            });
+        }
     }
 
     async create(dto: CreateCommodityTypeReqDto): Promise<CommodityType> {

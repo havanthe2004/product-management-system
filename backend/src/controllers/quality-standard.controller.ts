@@ -8,14 +8,16 @@ export class QualityStandardController {
 
     async getAll(req: Request, res: Response): Promise<Response> {
         try {
-            const { search, status, approvalStatus } = req.query;
+            const { search, status, approvalStatus, page, limit } = req.query;
             const filters = {
                 search: search ? String(search) : undefined,
                 status: status ? status as any : undefined,
-                approvalStatus: approvalStatus ? approvalStatus as any : undefined
+                approvalStatus: approvalStatus ? approvalStatus as any : undefined,
+                page: page ? Number(page) : undefined,
+                limit: limit ? Number(limit) : undefined
             };
-            const list = await qualityStandardService.getAll(filters);
-            return ResponseHelper.success(res, list, "Lấy danh sách tiêu chuẩn chất lượng thành công!");
+            const result = await qualityStandardService.getAll(filters);
+            return ResponseHelper.success(res, result, "Lấy danh sách tiêu chuẩn chất lượng thành công!");
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
         }
@@ -82,14 +84,16 @@ export class QualityStandardController {
 
     async getTrash(req: Request, res: Response): Promise<Response> {
         try {
-            const { search, status, approvalStatus } = req.query;
+            const { search, status, approvalStatus, page, limit } = req.query;
             const filters = {
                 search: search ? String(search) : undefined,
                 status: status ? status as any : undefined,
-                approvalStatus: approvalStatus ? approvalStatus as any : undefined
+                approvalStatus: approvalStatus ? approvalStatus as any : undefined,
+                page: page ? Number(page) : undefined,
+                limit: limit ? Number(limit) : undefined
             };
-            const list = await qualityStandardService.getTrash(filters);
-            return ResponseHelper.success(res, list, "Lấy danh sách thùng rác thành công!");
+            const result = await qualityStandardService.getTrash(filters);
+            return ResponseHelper.success(res, result, "Lấy danh sách thùng rác thành công!");
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
         }

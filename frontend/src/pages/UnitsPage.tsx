@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppSelector } from '../store/hooks';
 import { saveCatalog, deleteCatalog, restoreCatalog } from '../services/catalog.service';
 import { useUnitData } from '../hooks/useUnitData';
+import { useSearchParams } from 'react-router-dom';
 
 // Import split components
 import UnitTable from '../components/units/UnitTable';
 import UnitFormModal from '../components/units/UnitFormModal';
 import UnitDetailsModal from '../components/units/UnitDetailsModal';
 import UnitFilters from '../components/units/UnitFilters';
+import Pagination from '../components/common/Pagination';
 
 export default function UnitsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,12 +25,42 @@ export default function UnitsPage() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [approvalFilter, setApprovalFilter] = useState('ALL');
 
+  // Pagination states from URL query params
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = Number(searchParams.get('page') || '1');
+  const pageSize = Number(searchParams.get('pageSize') || '10');
+
   // Custom data hook with backend query parameters
-  const { dbUnits, fetchUnits } = useUnitData(isTrashView, {
+  const { dbUnits, totalItems, fetchUnits } = useUnitData(isTrashView, {
     search: searchQuery,
     status: statusFilter,
-    approvalStatus: approvalFilter
+    approvalStatus: approvalFilter,
+    page: currentPage,
+    limit: pageSize
   });
+
+  // Reset page when filters change (skip initial render to persist F5)
+  const prevFilters = useRef({ searchQuery, statusFilter, approvalFilter, isTrashView });
+  useEffect(() => {
+    const filtersChanged =
+      prevFilters.current.searchQuery !== searchQuery ||
+      prevFilters.current.statusFilter !== statusFilter ||
+      prevFilters.current.approvalFilter !== approvalFilter ||
+      prevFilters.current.isTrashView !== isTrashView;
+
+    prevFilters.current = { searchQuery, statusFilter, approvalFilter, isTrashView };
+
+    if (!filtersChanged) return;
+
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('page', '1');
+      return next;
+    }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, statusFilter, approvalFilter, isTrashView]);
+
+  const totalPages = Math.ceil(totalItems / pageSize);
 
   const [unitForm, setUnitForm] = useState({
     id: null as any,
@@ -174,6 +206,29 @@ export default function UnitsPage() {
         onReject={handleReject}
         isTrashView={isTrashView}
         isAuthorizedToApprove={isAuthorizedToApprove}
+      />
+
+      {/* Pagination Controls */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={(page) => {
+          setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('page', page.toString());
+            return next;
+          });
+        }}
+        onPageSizeChange={(size) => {
+          setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('page', '1');
+            next.set('pageSize', size.toString());
+            return next;
+          });
+        }}
       />
 
       {/* Modal for Add / Edit */}

@@ -1,13 +1,15 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppSelector } from '../store/hooks';
 import { saveCatalog, deleteCatalog, restoreCatalog } from '../services/catalog.service';
 import { useCountryData } from '../hooks/useCountryData';
+import { useSearchParams } from 'react-router-dom';
 
 // Import split components
 import CountryTable from '../components/countries/CountryTable';
 import CountryFormModal from '../components/countries/CountryFormModal';
 import CountryDetailsModal from '../components/countries/CountryDetailsModal';
 import CountryFilters from '../components/countries/CountryFilters';
+import Pagination from '../components/common/Pagination';
 
 export default function CountriesPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -23,12 +25,42 @@ export default function CountriesPage() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [approvalFilter, setApprovalFilter] = useState('ALL');
 
+  // Pagination states from URL query params
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = Number(searchParams.get('page') || '1');
+  const pageSize = Number(searchParams.get('pageSize') || '10');
+
   // Custom data hook with backend query parameters
-  const { countries, fetchCountries } = useCountryData(isTrashView, {
+  const { countries, totalItems, fetchCountries } = useCountryData(isTrashView, {
     search: searchQuery,
     status: statusFilter,
-    approvalStatus: approvalFilter
+    approvalStatus: approvalFilter,
+    page: currentPage,
+    limit: pageSize
   });
+
+  // Reset page when filters change (skip initial render to persist F5)
+  const prevFilters = useRef({ searchQuery, statusFilter, approvalFilter, isTrashView });
+  useEffect(() => {
+    const filtersChanged =
+      prevFilters.current.searchQuery !== searchQuery ||
+      prevFilters.current.statusFilter !== statusFilter ||
+      prevFilters.current.approvalFilter !== approvalFilter ||
+      prevFilters.current.isTrashView !== isTrashView;
+
+    prevFilters.current = { searchQuery, statusFilter, approvalFilter, isTrashView };
+
+    if (!filtersChanged) return;
+
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('page', '1');
+      return next;
+    }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, statusFilter, approvalFilter, isTrashView]);
+
+  const totalPages = Math.ceil(totalItems / pageSize);
 
   const [countryForm, setCountryForm] = useState({
     id: null as any,
@@ -171,6 +203,29 @@ export default function CountriesPage() {
         onReject={handleReject}
         isTrashView={isTrashView}
         isAuthorizedToApprove={isAuthorizedToApprove}
+      />
+
+      {/* Pagination Controls */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={(page) => {
+          setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('page', page.toString());
+            return next;
+          });
+        }}
+        onPageSizeChange={(size) => {
+          setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('page', '1');
+            next.set('pageSize', size.toString());
+            return next;
+          });
+        }}
       />
 
       {/* Modal for Add / Edit */}

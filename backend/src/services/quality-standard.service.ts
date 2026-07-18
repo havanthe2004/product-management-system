@@ -8,56 +8,129 @@ import { CreateQualityStandardReqDto, UpdateQualityStandardReqDto } from "../dto
 export class QualityStandardService {
     private standardRepository = QualityStandardRepository;
 
-    async getAll(filters?: { search?: string; status?: CommodityStatus; approvalStatus?: ApprovalStatus }): Promise<QualityStandard[]> {
+    async getAll(filters?: {
+        search?: string;
+        status?: CommodityStatus;
+        approvalStatus?: ApprovalStatus;
+        page?: number;
+        limit?: number;
+    }): Promise<QualityStandard[] | { items: QualityStandard[]; total: number }> {
         const where: any = {};
         if (filters) {
             if (filters.status) where.status = filters.status;
             if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
+        }
 
-            if (filters.search) {
-                const searchPattern = `%${filters.search}%`;
+        const buildFindOptions = () => {
+            const options: any = {
+                order: { createdAt: "DESC" }
+            };
+            if (filters?.page && filters?.limit) {
+                options.skip = (filters.page - 1) * filters.limit;
+                options.take = filters.limit;
+            }
+            return options;
+        };
+
+        if (filters?.search) {
+            const searchPattern = `%${filters.search}%`;
+            const conditions = [
+                { ...where, standardName: Like(searchPattern) },
+                { ...where, standardCode: Like(searchPattern) },
+                { ...where, description: Like(searchPattern) }
+            ];
+
+            if (filters?.page && filters?.limit) {
+                const [items, total] = await this.standardRepository.findAndCount({
+                    where: conditions,
+                    ...buildFindOptions()
+                });
+                return { items, total };
+            } else {
                 return this.standardRepository.find({
-                    where: [
-                        { ...where, standardName: Like(searchPattern) },
-                        { ...where, standardCode: Like(searchPattern) },
-                        { ...where, description: Like(searchPattern) }
-                    ],
+                    where: conditions,
                     order: { createdAt: "DESC" }
                 });
             }
         }
-        return this.standardRepository.find({
-            where,
-            order: { createdAt: "DESC" }
-        });
+
+        if (filters?.page && filters?.limit) {
+            const [items, total] = await this.standardRepository.findAndCount({
+                where,
+                ...buildFindOptions()
+            });
+            return { items, total };
+        } else {
+            return this.standardRepository.find({
+                where,
+                order: { createdAt: "DESC" }
+            });
+        }
     }
 
-    async getTrash(filters?: { search?: string; status?: CommodityStatus; approvalStatus?: ApprovalStatus }): Promise<QualityStandard[]> {
+    async getTrash(filters?: {
+        search?: string;
+        status?: CommodityStatus;
+        approvalStatus?: ApprovalStatus;
+        page?: number;
+        limit?: number;
+    }): Promise<QualityStandard[] | { items: QualityStandard[]; total: number }> {
         const where: any = {
             deletedAt: Not(IsNull())
         };
         if (filters) {
             if (filters.status) where.status = filters.status;
             if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
+        }
 
-            if (filters.search) {
-                const searchPattern = `%${filters.search}%`;
+        const buildFindOptions = () => {
+            const options: any = {
+                withDeleted: true,
+                order: { deletedAt: "DESC" }
+            };
+            if (filters?.page && filters?.limit) {
+                options.skip = (filters.page - 1) * filters.limit;
+                options.take = filters.limit;
+            }
+            return options;
+        };
+
+        if (filters?.search) {
+            const searchPattern = `%${filters.search}%`;
+            const conditions = [
+                { ...where, standardName: Like(searchPattern) },
+                { ...where, standardCode: Like(searchPattern) },
+                { ...where, description: Like(searchPattern) }
+            ];
+
+            if (filters?.page && filters?.limit) {
+                const [items, total] = await this.standardRepository.findAndCount({
+                    where: conditions,
+                    ...buildFindOptions()
+                });
+                return { items, total };
+            } else {
                 return this.standardRepository.find({
-                    where: [
-                        { ...where, standardName: Like(searchPattern) },
-                        { ...where, standardCode: Like(searchPattern) },
-                        { ...where, description: Like(searchPattern) }
-                    ],
+                    where: conditions,
                     withDeleted: true,
                     order: { deletedAt: "DESC" }
                 });
             }
         }
-        return this.standardRepository.find({
-            where,
-            withDeleted: true,
-            order: { deletedAt: "DESC" }
-        });
+
+        if (filters?.page && filters?.limit) {
+            const [items, total] = await this.standardRepository.findAndCount({
+                where,
+                ...buildFindOptions()
+            });
+            return { items, total };
+        } else {
+            return this.standardRepository.find({
+                where,
+                withDeleted: true,
+                order: { deletedAt: "DESC" }
+            });
+        }
     }
 
     async create(dto: CreateQualityStandardReqDto): Promise<QualityStandard> {

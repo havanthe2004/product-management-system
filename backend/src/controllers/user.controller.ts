@@ -31,16 +31,17 @@ export class UserController {
 
     async getAll(req: Request, res: Response): Promise<Response> {
         try {
-            const { search, status, role } = req.query;
+            const { search, status, role, page, limit } = req.query;
             const filters = {
                 search: search ? String(search) : undefined,
                 status: status ? status as any : undefined,
-                role: role ? role as any : undefined
+                role: role ? role as any : undefined,
+                page: page ? Number(page) : undefined,
+                limit: limit ? Number(limit) : undefined
             };
-            const list = await userService.getAll(filters);
+            const result = await userService.getAll(filters);
 
-            // Map list to omit password
-            const mappedList = list.map(u => ({
+            const mapUser = (u: any) => ({
                 id: u.id,
                 fullName: u.fullName,
                 email: u.email,
@@ -51,9 +52,18 @@ export class UserController {
                 dateOfBirth: u.dateOfBirth,
                 gender: u.gender,
                 createdAt: u.createdAt
-            }));
+            });
 
-            return ResponseHelper.success(res, mappedList, "Lấy danh sách thành viên thành công!");
+            if (Array.isArray(result)) {
+                const mappedList = result.map(mapUser);
+                return ResponseHelper.success(res, mappedList, "Lấy danh sách thành viên thành công!");
+            } else {
+                const mappedList = result.items.map(mapUser);
+                return ResponseHelper.success(res, {
+                    items: mappedList,
+                    total: result.total
+                }, "Lấy danh sách thành viên thành công!");
+            }
         } catch (error: any) {
             return ResponseHelper.error(res, error.message, null, 400);
         }

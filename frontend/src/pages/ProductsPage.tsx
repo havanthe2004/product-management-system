@@ -18,6 +18,8 @@ import ProductFilters from '../components/products/ProductFilters';
 import ProductTable from '../components/products/ProductTable';
 import ProductFormModal from '../components/products/ProductFormModal';
 import ProductDetailsModal from '../components/products/ProductDetailsModal';
+import Pagination from '../components/common/Pagination';
+import { useSearchParams } from 'react-router-dom';
 
 export default function ProductsPage() {
   const [categories, setCategories] = useState<CommodityGroup[]>([]);
@@ -44,8 +46,44 @@ export default function ProductsPage() {
   const userRole = auth.user?.role;
   const isAuthorizedToApprove = userRole === 'ADMIN' || userRole === 'MANAGER';
 
+  // Pagination states from URL query params
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = Number(searchParams.get('page') || '1');
+  const pageSize = Number(searchParams.get('pageSize') || '10');
+
   // Custom data hook
-  const { dbProducts, fetchCommodities } = useCommodityData(isTrashView);
+  const { dbProducts, totalItems, fetchCommodities } = useCommodityData(isTrashView, {
+    search: searchQuery,
+    status: activeFilter,
+    approvalStatus: approvalFilter,
+    groupId: groupFilter,
+    typeId: typeFilter,
+    page: currentPage,
+    limit: pageSize
+  });
+
+  // Reset page when filters change (skip initial render to persist F5)
+  const prevFilters = useRef({ searchQuery, groupFilter, typeFilter, activeFilter, approvalFilter, isTrashView });
+  useEffect(() => {
+    const filtersChanged =
+      prevFilters.current.searchQuery !== searchQuery ||
+      prevFilters.current.groupFilter !== groupFilter ||
+      prevFilters.current.typeFilter !== typeFilter ||
+      prevFilters.current.activeFilter !== activeFilter ||
+      prevFilters.current.approvalFilter !== approvalFilter ||
+      prevFilters.current.isTrashView !== isTrashView;
+
+    prevFilters.current = { searchQuery, groupFilter, typeFilter, activeFilter, approvalFilter, isTrashView };
+
+    if (!filtersChanged) return;
+
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('page', '1');
+      return next;
+    }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, groupFilter, typeFilter, activeFilter, approvalFilter, isTrashView]);
 
   // Load catalogs
   const fetchCatalogs = async () => {
@@ -218,22 +256,7 @@ export default function ProductsPage() {
     }
   };
 
-  // Filter products locally
-  const filteredProducts = dbProducts.filter((item) => {
-    const s = searchQuery.toLowerCase().trim();
-    const matchSearch =
-      !s ||
-      item.commodityCode.toLowerCase().includes(s) ||
-      item.commodityName.toLowerCase().includes(s) ||
-      (item.description && item.description.toLowerCase().includes(s));
-
-    const matchGroup = groupFilter === 'ALL' || Number(item.group?.id) === Number(groupFilter);
-    const matchType = typeFilter === 'ALL' || Number(item.type?.id) === Number(typeFilter);
-    const matchActive = activeFilter === 'ALL' || item.status === activeFilter;
-    const matchApproval = approvalFilter === 'ALL' || item.approvalStatus === approvalFilter;
-
-    return matchSearch && matchGroup && matchType && matchActive && matchApproval;
-  });
+  const totalPages = Math.ceil(totalItems / pageSize);
 
   // Filter types for the form modal dynamically
   const filteredTypesForForm = types.filter(
@@ -296,7 +319,7 @@ export default function ProductsPage() {
 
       {/* Table Component */}
       <ProductTable
-        filteredProducts={filteredProducts}
+        filteredProducts={dbProducts}
         onViewDetails={setViewingProduct}
         onEdit={handleOpenEditModal}
         onDelete={handleDelete}
@@ -305,6 +328,29 @@ export default function ProductsPage() {
         isTrashView={isTrashView}
         isAuthorizedToApprove={isAuthorizedToApprove}
         userRole={userRole}
+      />
+
+      {/* Pagination Controls */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={(page) => {
+          setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('page', page.toString());
+            return next;
+          });
+        }}
+        onPageSizeChange={(size) => {
+          setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('page', '1');
+            next.set('pageSize', size.toString());
+            return next;
+          });
+        }}
       />
 
       {/* Modal - Add / Edit Product */}

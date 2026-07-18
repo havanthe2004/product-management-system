@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useAppSelector } from '../store/hooks';
 import * as userService from '../services/user.service';
 import { useMemberData } from '../hooks/useMemberData';
 import { DEFAULT_AVATAR } from '../layouts/Sidebar';
+import { useSearchParams } from 'react-router-dom';
 
 // Import split components
 import MemberTable from '../components/members/MemberTable';
 import MemberFormModal from '../components/members/MemberFormModal';
 import MemberDetailsModal from '../components/members/MemberDetailsModal';
 import MemberFilters from '../components/members/MemberFilters';
+import Pagination from '../components/common/Pagination';
 
 export default function MembersPage() {
   const auth = useAppSelector((state) => state.auth);
@@ -18,12 +20,41 @@ export default function MembersPage() {
   const [statusFilter, setStatusFilter] = useState('ALL');
   const [roleFilter, setRoleFilter] = useState('ALL');
 
+  // Pagination states from URL query params
+  const [searchParams, setSearchParams] = useSearchParams();
+  const currentPage = Number(searchParams.get('page') || '1');
+  const pageSize = Number(searchParams.get('pageSize') || '10');
+
   // Custom hook with backend query parameters
-  const { members, fetchMembers } = useMemberData({
+  const { members, totalItems, fetchMembers } = useMemberData({
     search: searchQuery,
     status: statusFilter,
-    role: roleFilter
+    role: roleFilter,
+    page: currentPage,
+    limit: pageSize
   });
+
+  // Reset page when filters change (skip initial render to persist F5)
+  const prevFilters = useRef({ searchQuery, statusFilter, roleFilter });
+  useEffect(() => {
+    const filtersChanged =
+      prevFilters.current.searchQuery !== searchQuery ||
+      prevFilters.current.statusFilter !== statusFilter ||
+      prevFilters.current.roleFilter !== roleFilter;
+
+    prevFilters.current = { searchQuery, statusFilter, roleFilter };
+
+    if (!filtersChanged) return;
+
+    setSearchParams(prev => {
+      const next = new URLSearchParams(prev);
+      next.set('page', '1');
+      return next;
+    }, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery, statusFilter, roleFilter]);
+
+  const totalPages = Math.ceil(totalItems / pageSize);
 
   // Modal states for User
   const [isUserModalOpen, setIsUserModalOpen] = useState(false);
@@ -142,6 +173,29 @@ export default function MembersPage() {
         onToggleStatus={handleToggleMemberStatus}
         auth={auth}
         getAvatarUrl={getAvatarUrl}
+      />
+
+      {/* Pagination Controls */}
+      <Pagination
+        currentPage={currentPage}
+        totalPages={totalPages}
+        totalItems={totalItems}
+        pageSize={pageSize}
+        onPageChange={(page) => {
+          setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('page', page.toString());
+            return next;
+          });
+        }}
+        onPageSizeChange={(size) => {
+          setSearchParams(prev => {
+            const next = new URLSearchParams(prev);
+            next.set('page', '1');
+            next.set('pageSize', size.toString());
+            return next;
+          });
+        }}
       />
 
       {/* Modal - View User Details */}
