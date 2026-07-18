@@ -49,13 +49,15 @@ export class CommodityController {
 
     async getAll(req: Request, res: Response): Promise<Response> {
         try {
-            const { search, status, approvalStatus, groupId, typeId, page, limit } = req.query;
+            const { search, status, approvalStatus, groupId, typeId, countryIds, standardIds, page, limit } = req.query;
             const filters = {
                 search: search ? String(search) : undefined,
                 status: status ? status as any : undefined,
                 approvalStatus: approvalStatus ? approvalStatus as any : undefined,
-                groupId: groupId ? Number(groupId) : undefined,
-                typeId: typeId ? Number(typeId) : undefined,
+                groupId: groupId && groupId !== 'ALL' ? Number(groupId) : undefined,
+                typeId: typeId && typeId !== 'ALL' ? Number(typeId) : undefined,
+                countryIds: countryIds ? String(countryIds).split(',').map(Number).filter(n => !isNaN(n)) : undefined,
+                standardIds: standardIds ? String(standardIds).split(',').map(Number).filter(n => !isNaN(n)) : undefined,
                 page: page ? Number(page) : undefined,
                 limit: limit ? Number(limit) : undefined
             };
@@ -68,13 +70,15 @@ export class CommodityController {
 
     async getTrash(req: Request, res: Response): Promise<Response> {
         try {
-            const { search, status, approvalStatus, groupId, typeId, page, limit } = req.query;
+            const { search, status, approvalStatus, groupId, typeId, countryIds, standardIds, page, limit } = req.query;
             const filters = {
                 search: search ? String(search) : undefined,
                 status: status ? status as any : undefined,
                 approvalStatus: approvalStatus ? approvalStatus as any : undefined,
-                groupId: groupId ? Number(groupId) : undefined,
-                typeId: typeId ? Number(typeId) : undefined,
+                groupId: groupId && groupId !== 'ALL' ? Number(groupId) : undefined,
+                typeId: typeId && typeId !== 'ALL' ? Number(typeId) : undefined,
+                countryIds: countryIds ? String(countryIds).split(',').map(Number).filter(n => !isNaN(n)) : undefined,
+                standardIds: standardIds ? String(standardIds).split(',').map(Number).filter(n => !isNaN(n)) : undefined,
                 page: page ? Number(page) : undefined,
                 limit: limit ? Number(limit) : undefined
             };

@@ -26,6 +26,8 @@ export class CommodityService {
         approvalStatus?: CommodityApprovalStatus;
         groupId?: number;
         typeId?: number;
+        countryIds?: number[];
+        standardIds?: number[];
         page?: number;
         limit?: number;
     }): Promise<Commodity[] | { items: Commodity[]; total: number }> {
@@ -35,6 +37,12 @@ export class CommodityService {
             if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
             if (filters.groupId) where.group = { id: filters.groupId };
             if (filters.typeId) where.type = { id: filters.typeId };
+            if (filters.countryIds && filters.countryIds.length > 0) {
+                where.countries = { id: In(filters.countryIds) };
+            }
+            if (filters.standardIds && filters.standardIds.length > 0) {
+                where.qualityStandards = { id: In(filters.standardIds) };
+            }
         }
 
         const buildFindOptions = () => {
@@ -120,6 +128,8 @@ export class CommodityService {
         approvalStatus?: CommodityApprovalStatus;
         groupId?: number;
         typeId?: number;
+        countryIds?: number[];
+        standardIds?: number[];
         page?: number;
         limit?: number;
     }): Promise<Commodity[] | { items: Commodity[]; total: number }> {
@@ -131,6 +141,12 @@ export class CommodityService {
             if (filters.approvalStatus) where.approvalStatus = filters.approvalStatus;
             if (filters.groupId) where.group = { id: filters.groupId };
             if (filters.typeId) where.type = { id: filters.typeId };
+            if (filters.countryIds && filters.countryIds.length > 0) {
+                where.countries = { id: In(filters.countryIds) };
+            }
+            if (filters.standardIds && filters.standardIds.length > 0) {
+                where.qualityStandards = { id: In(filters.standardIds) };
+            }
         }
 
         const buildFindOptions = () => {
@@ -230,8 +246,14 @@ export class CommodityService {
             throw new Error("Mã mặt hàng, tên mặt hàng, nhóm, loại và đơn vị tính là bắt buộc.");
         }
 
-        const existing = await this.commodityRepository.findByCode(commodityCode);
+        const existing = await this.commodityRepository.findOne({
+            where: { commodityCode },
+            withDeleted: true
+        });
         if (existing) {
+            if (existing.deletedAt) {
+                throw new Error("Mã mặt hàng này đã tồn tại trong Thùng rác. Vui lòng khôi phục hoặc sử dụng mã khác.");
+            }
             throw new Error("Mã mặt hàng này đã tồn tại.");
         }
 
@@ -417,8 +439,14 @@ export class CommodityService {
         }
 
         if (dto.commodityCode && dto.commodityCode !== commodity.commodityCode) {
-            const existing = await this.commodityRepository.findByCode(dto.commodityCode);
+            const existing = await this.commodityRepository.findOne({
+                where: { commodityCode: dto.commodityCode },
+                withDeleted: true
+            });
             if (existing) {
+                if (existing.deletedAt) {
+                    throw new Error("Mã mặt hàng mới đã tồn tại trong Thùng rác. Vui lòng khôi phục hoặc sử dụng mã khác.");
+                }
                 throw new Error("Mã mặt hàng này đã tồn tại ở bản ghi khác.");
             }
             commodity.commodityCode = dto.commodityCode;

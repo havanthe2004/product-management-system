@@ -1,32 +1,36 @@
 import "reflect-metadata";
 import { AppDataSource } from "./config/data-source";
-import { CommodityGroup } from "./entities/commodity-group.entity";
+import { Commodity } from "./entities/commodity.entity";
+import { In } from "typeorm";
 
 async function main() {
     await AppDataSource.initialize();
     console.log("Database initialized");
 
-    const repo = AppDataSource.getRepository(CommodityGroup);
-    
-    // Count all
-    const countAll = await repo.count();
-    console.log("Total groups in database:", countAll);
+    const repo = AppDataSource.getRepository(Commodity);
 
-    // Page 1, limit 1
-    const [items1, total1] = await repo.findAndCount({
-        order: { createdAt: "DESC" },
-        skip: 0,
-        take: 1
-    });
-    console.log("Page 1, limit 1:", items1.map(i => ({ id: i.id, code: i.groupCode, name: i.groupName })), "Total count:", total1);
+    try {
+        const countryIds = [1, 2]; // Test array
+        console.log(`Querying commodities with countryIds in: ${countryIds.join(", ")}`);
+        
+        const [items, total] = await repo.findAndCount({
+            where: {
+                countries: { id: In(countryIds) }
+            },
+            relations: {
+                countries: true
+            },
+            take: 10,
+            skip: 0
+        });
 
-    // Page 2, limit 1
-    const [items2, total2] = await repo.findAndCount({
-        order: { createdAt: "DESC" },
-        skip: 1,
-        take: 1
-    });
-    console.log("Page 2, limit 1:", items2.map(i => ({ id: i.id, code: i.groupCode, name: i.groupName })), "Total count:", total2);
+        console.log(`Found ${total} commodities:`);
+        for (const item of items) {
+            console.log(`- ${item.commodityCode}: ${item.commodityName}, countries: ${item.countries?.map(c => c.id).join(", ")}`);
+        }
+    } catch (err: any) {
+        console.error("Query failed with error:", err.message);
+    }
 
     await AppDataSource.destroy();
 }

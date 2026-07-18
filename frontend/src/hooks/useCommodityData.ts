@@ -4,7 +4,17 @@ import type { Commodity } from '../types';
 
 export function useCommodityData(
   isTrashView: boolean,
-  filters?: { search?: string; status?: string; approvalStatus?: string; groupId?: string; typeId?: string; page?: number; limit?: number }
+  filters?: {
+    search?: string;
+    status?: string;
+    approvalStatus?: string;
+    groupId?: string;
+    typeId?: string;
+    countryIds?: number[];
+    standardIds?: number[];
+    page?: number;
+    limit?: number;
+  }
 ) {
   const [dbProducts, setDbProducts] = useState<Commodity[]>([]);
   const [totalItems, setTotalItems] = useState(0);
@@ -18,6 +28,12 @@ export function useCommodityData(
     if (filters?.approvalStatus && filters.approvalStatus !== 'ALL') apiParams.approvalStatus = filters.approvalStatus;
     if (filters?.groupId && filters.groupId !== 'ALL') apiParams.groupId = filters.groupId;
     if (filters?.typeId && filters.typeId !== 'ALL') apiParams.typeId = filters.typeId;
+    if (filters?.countryIds && filters.countryIds.length > 0) {
+      apiParams.countryIds = filters.countryIds.join(',');
+    }
+    if (filters?.standardIds && filters.standardIds.length > 0) {
+      apiParams.standardIds = filters.standardIds.join(',');
+    }
     if (filters?.page) apiParams.page = filters.page;
     if (filters?.limit) apiParams.limit = filters.limit;
 
@@ -52,6 +68,8 @@ export function useCommodityData(
     filters?.approvalStatus,
     filters?.groupId,
     filters?.typeId,
+    filters?.countryIds?.join(','),
+    filters?.standardIds?.join(','),
     filters?.page,
     filters?.limit
   ]);

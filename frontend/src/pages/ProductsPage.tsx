@@ -34,6 +34,8 @@ export default function ProductsPage() {
   const [typeFilter, setTypeFilter] = useState('ALL');
   const [activeFilter, setActiveFilter] = useState('ALL');
   const [approvalFilter, setApprovalFilter] = useState('ALL');
+  const [countryFilter, setCountryFilter] = useState<number[]>([]);
+  const [standardFilter, setStandardFilter] = useState<number[]>([]);
 
   // UI States
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -58,22 +60,49 @@ export default function ProductsPage() {
     approvalStatus: approvalFilter,
     groupId: groupFilter,
     typeId: typeFilter,
+    countryIds: countryFilter,
+    standardIds: standardFilter,
     page: currentPage,
     limit: pageSize
   });
 
   // Reset page when filters change (skip initial render to persist F5)
-  const prevFilters = useRef({ searchQuery, groupFilter, typeFilter, activeFilter, approvalFilter, isTrashView });
+  const prevFilters = useRef({
+    searchQuery,
+    groupFilter,
+    typeFilter,
+    activeFilter,
+    approvalFilter,
+    countryFilter: JSON.stringify(countryFilter),
+    standardFilter: JSON.stringify(standardFilter),
+    isTrashView
+  });
   useEffect(() => {
+    const prevCountryJson = prevFilters.current.countryFilter;
+    const currCountryJson = JSON.stringify(countryFilter);
+    const prevStandardJson = prevFilters.current.standardFilter;
+    const currStandardJson = JSON.stringify(standardFilter);
+
     const filtersChanged =
       prevFilters.current.searchQuery !== searchQuery ||
       prevFilters.current.groupFilter !== groupFilter ||
       prevFilters.current.typeFilter !== typeFilter ||
       prevFilters.current.activeFilter !== activeFilter ||
       prevFilters.current.approvalFilter !== approvalFilter ||
+      prevCountryJson !== currCountryJson ||
+      prevStandardJson !== currStandardJson ||
       prevFilters.current.isTrashView !== isTrashView;
 
-    prevFilters.current = { searchQuery, groupFilter, typeFilter, activeFilter, approvalFilter, isTrashView };
+    prevFilters.current = {
+      searchQuery,
+      groupFilter,
+      typeFilter,
+      activeFilter,
+      approvalFilter,
+      countryFilter: currCountryJson,
+      standardFilter: currStandardJson,
+      isTrashView
+    };
 
     if (!filtersChanged) return;
 
@@ -83,7 +112,7 @@ export default function ProductsPage() {
       return next;
     }, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, groupFilter, typeFilter, activeFilter, approvalFilter, isTrashView]);
+  }, [searchQuery, groupFilter, typeFilter, activeFilter, approvalFilter, countryFilter, standardFilter, isTrashView]);
 
   // Load catalogs
   const fetchCatalogs = async () => {
@@ -314,6 +343,12 @@ export default function ProductsPage() {
           setApprovalFilter={setApprovalFilter}
           categories={categories}
           types={types}
+          countries={countries}
+          standards={standards}
+          countryFilter={countryFilter}
+          setCountryFilter={setCountryFilter}
+          standardFilter={standardFilter}
+          setStandardFilter={setStandardFilter}
         />
       )}
 
