@@ -47,7 +47,7 @@ export default function Sidebar({
       <div className="sidebar-brand" style={{ marginBottom: '16px' }}>
         <span className="brand-logo">📦</span>
         <div style={{ display: 'flex', flexDirection: 'column' }}>
-          <span style={{ fontWeight: '800', fontSize: '18px', letterSpacing: '0.5px' }}>ProMan</span>
+          <span style={{ fontWeight: '800', fontSize: '16px', letterSpacing: '0.5px', whiteSpace: 'nowrap' }}>Quản Lý Danh Mục Mặt Hàng</span>
           <span style={{ fontSize: '10px', color: 'var(--primary)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: '1px', marginTop: '2px' }}>
             {auth.user?.role} Portal
           </span>

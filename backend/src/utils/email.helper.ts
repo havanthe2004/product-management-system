@@ -43,7 +43,7 @@ export class EmailHelper {
                 });
 
                 await transporter.sendMail({
-                    from: `"Hệ thống Quản lý" <${smtpUser}>`,
+                    from: `"Hệ thống Quản lý Danh mục Mặt hàng" <${smtpUser}>`,
                     to: email,
                     subject: "Khôi phục mật khẩu - Mã OTP của bạn",
                     text: `Mã OTP khôi phục mật khẩu của bạn là: ${otp}. Mã này sẽ hết hạn sau 10 phút.`,
@@ -58,7 +58,7 @@ export class EmailHelper {
                             <p style="color: #ef4444; font-size: 13px;">Lưu ý: Mã này chỉ có hiệu lực trong vòng 10 phút và không được chia sẻ với bất kỳ ai.</p>
                             <p>Nếu bạn không thực hiện yêu cầu này, vui lòng bỏ qua email.</p>
                             <hr style="border: 0; border-top: 1px solid #e0e0e0; margin: 20px 0;" />
-                            <p style="font-size: 11px; color: #9ca3af; text-align: center;">Hệ thống Quản lý Sản phẩm & Mặt hàng</p>
+                            <p style="font-size: 11px; color: #9ca3af; text-align: center;">Hệ thống Quản lý Danh mục Mặt hàng</p>
                         </div>
                     `,
                 });

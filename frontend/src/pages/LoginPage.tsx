@@ -97,7 +97,7 @@ export default function LoginPage() {
         {mode === 'login' && (
           <form onSubmit={handleLogin}>
             <h2 className="login-title">Đăng Nhập</h2>
-            <p className="login-subtitle">Chào mừng bạn quay trở lại với ProMan</p>
+            <p className="login-subtitle">Chào mừng bạn quay trở lại với Hệ thống Quản lý Danh mục Mặt hàng</p>
 
             {error && <div className="login-alert login-alert-danger">⚠️ {error}</div>}
             {successMsg && <div className="login-alert login-alert-success">✅ {successMsg}</div>}

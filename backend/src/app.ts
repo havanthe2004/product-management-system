@@ -54,7 +54,7 @@ app.get("/health", (req, res) => {
 
 // Basic API route
 app.get("/", (req, res) => {
-    res.send("Chào mừng đến với API Hệ thống Quản lý Sản phẩm!");
+    res.send("Chào mừng đến với API Hệ thống Quản lý Danh mục Mặt hàng!");
 });
 
 export default app;

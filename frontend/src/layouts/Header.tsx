@@ -28,7 +28,7 @@ export default function Header({ activeTab, isDark, setIsDark }: HeaderProps) {
       case 'profile':
         return '👤 Thông tin cá nhân & Bảo mật';
       default:
-        return 'ProMan Dashboard';
+        return 'Hệ thống Quản lý Danh mục Mặt hàng';
     }
   };
 
