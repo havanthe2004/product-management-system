@@ -20,8 +20,10 @@ import ProductFormModal from '../components/products/ProductFormModal';
 import ProductDetailsModal from '../components/products/ProductDetailsModal';
 import Pagination from '../components/common/Pagination';
 import { useSearchParams } from 'react-router-dom';
+import { useConfirm } from '../context/ConfirmContext';
 
 export default function ProductsPage() {
+  const confirm = useConfirm();
   const [categories, setCategories] = useState<CommodityGroup[]>([]);
   const [types, setTypes] = useState<CommodityType[]>([]);
   const [units, setUnits] = useState<Unit[]>([]);
@@ -223,6 +225,15 @@ export default function ProductsPage() {
 
     const finalCode = `${selGroup.groupCode}.${selType.typeCode}.${form.itemCode}`;
 
+    const isConfirmedSave = await confirm({
+      title: form.id ? "Xác nhận cập nhật" : "Xác nhận thêm mới",
+      message: form.id ? "Bạn có chắc chắn muốn cập nhật thông tin mặt hàng này không?" : "Bạn có chắc chắn muốn thêm mặt hàng mới này không?",
+      confirmText: form.id ? "Cập nhật" : "Thêm mới",
+      cancelText: "Hủy",
+      type: "info"
+    });
+    if (!isConfirmedSave) return;
+
     try {
       const dataToSave = {
         ...form,
@@ -245,7 +256,14 @@ export default function ProductsPage() {
 
   const handleApprove = async (item: Commodity, approveStatus: 'APPROVED' | 'REJECTED') => {
     const actionText = approveStatus === 'APPROVED' ? 'phê duyệt' : 'từ chối';
-    if (!confirm(`Bạn có chắc chắn muốn ${actionText} mặt hàng "${item.commodityName}"?`)) return;
+    const isConfirmedApprove = await confirm({
+      title: approveStatus === 'APPROVED' ? "Xác nhận phê duyệt" : "Xác nhận từ chối",
+      message: `Bạn có chắc chắn muốn ${actionText} mặt hàng "${item.commodityName}"?`,
+      confirmText: approveStatus === 'APPROVED' ? "Phê duyệt" : "Từ chối",
+      cancelText: "Hủy",
+      type: approveStatus === 'APPROVED' ? "success" : "danger"
+    });
+    if (!isConfirmedApprove) return;
 
     try {
       await saveCatalog('commodities', {
@@ -264,7 +282,14 @@ export default function ProductsPage() {
   };
 
   const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`Bạn có chắc chắn muốn xóa mặt hàng "${name}"?`)) return;
+    const isConfirmedDelete = await confirm({
+      title: "Xác nhận xóa",
+      message: `Bạn có chắc chắn muốn xóa mặt hàng "${name}"?`,
+      confirmText: "Xóa mặt hàng",
+      cancelText: "Hủy",
+      type: "danger"
+    });
+    if (!isConfirmedDelete) return;
 
     try {
       await deleteCatalog('commodities', id);
@@ -275,7 +300,14 @@ export default function ProductsPage() {
   };
 
   const handleRestore = async (id: number, name: string) => {
-    if (!confirm(`Bạn có chắc chắn muốn khôi phục mặt hàng "${name}"?`)) return;
+    const isConfirmedRestore = await confirm({
+      title: "Xác nhận khôi phục",
+      message: `Bạn có chắc chắn muốn khôi phục mặt hàng "${name}"?`,
+      confirmText: "Khôi phục",
+      cancelText: "Hủy",
+      type: "success"
+    });
+    if (!isConfirmedRestore) return;
 
     try {
       await restoreCatalog('commodities', id);

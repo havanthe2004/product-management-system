@@ -3,6 +3,7 @@ import { useAppSelector } from '../store/hooks';
 import { saveCatalog, deleteCatalog, restoreCatalog } from '../services/catalog.service';
 import { useGroupData } from '../hooks/useGroupData';
 import { useSearchParams } from 'react-router-dom';
+import { useConfirm } from '../context/ConfirmContext';
 
 // Import split components
 import GroupTable from '../components/commodity-groups/GroupTable';
@@ -12,6 +13,7 @@ import GroupFilters from '../components/commodity-groups/GroupFilters';
 import Pagination from '../components/common/Pagination';
 
 export default function CommodityGroupsPage() {
+  const confirm = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTrashView, setIsTrashView] = useState(false);
   const [viewingGroup, setViewingGroup] = useState<any | null>(null);
@@ -84,6 +86,16 @@ export default function CommodityGroupsPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const isConfirmedSave = await confirm({
+      title: groupForm.id ? "Xác nhận cập nhật" : "Xác nhận thêm mới",
+      message: groupForm.id ? "Bạn có chắc chắn muốn cập nhật nhóm mặt hàng này không?" : "Bạn có chắc chắn muốn thêm nhóm mặt hàng mới này không?",
+      confirmText: groupForm.id ? "Cập nhật" : "Thêm mới",
+      cancelText: "Hủy",
+      type: "info"
+    });
+    if (!isConfirmedSave) return;
+
     try {
       await saveCatalog('commodity-groups', groupForm);
       resetForm();
@@ -95,7 +107,14 @@ export default function CommodityGroupsPage() {
   };
 
   const handleApprove = async (g: any) => {
-    if (!confirm(`Bạn có chắc chắn muốn duyệt nhóm mặt hàng "${g.groupName}"?`)) return;
+    const isConfirmedApprove = await confirm({
+      title: "Phê duyệt nhóm mặt hàng",
+      message: `Bạn có chắc chắn muốn duyệt nhóm mặt hàng "${g.groupName}"?`,
+      confirmText: "Phê duyệt",
+      cancelText: "Hủy",
+      type: "success"
+    });
+    if (!isConfirmedApprove) return;
     try {
       await saveCatalog('commodity-groups', {
         ...g,
@@ -108,7 +127,14 @@ export default function CommodityGroupsPage() {
   };
 
   const handleReject = async (g: any) => {
-    if (!confirm(`Bạn muốn từ chối nhóm mặt hàng "${g.groupName}"?`)) return;
+    const isConfirmedReject = await confirm({
+      title: "Từ chối nhóm mặt hàng",
+      message: `Bạn muốn từ chối nhóm mặt hàng "${g.groupName}"?`,
+      confirmText: "Từ chối",
+      cancelText: "Hủy",
+      type: "danger"
+    });
+    if (!isConfirmedReject) return;
     try {
       await saveCatalog('commodity-groups', { ...g, approvalStatus: 'REJECTED' });
       fetchGroups();
@@ -118,7 +144,14 @@ export default function CommodityGroupsPage() {
   };
 
   const handleRestore = async (id: number, name: string) => {
-    if (!confirm(`Bạn có chắc muốn khôi phục nhóm mặt hàng "${name}"?`)) return;
+    const isConfirmedRestore = await confirm({
+      title: "Khôi phục nhóm mặt hàng",
+      message: `Bạn có chắc muốn khôi phục nhóm mặt hàng "${name}"?`,
+      confirmText: "Khôi phục",
+      cancelText: "Hủy",
+      type: "success"
+    });
+    if (!isConfirmedRestore) return;
     try {
       await restoreCatalog('commodity-groups', id);
       fetchGroups();
@@ -128,7 +161,14 @@ export default function CommodityGroupsPage() {
   };
 
   const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`Bạn muốn xóa nhóm ${name}?`)) return;
+    const isConfirmedDelete = await confirm({
+      title: "Xóa nhóm mặt hàng",
+      message: `Bạn muốn xóa nhóm ${name}?`,
+      confirmText: "Xóa",
+      cancelText: "Hủy",
+      type: "danger"
+    });
+    if (!isConfirmedDelete) return;
     try {
       await deleteCatalog('commodity-groups', id);
       fetchGroups();

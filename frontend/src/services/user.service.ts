@@ -20,3 +20,8 @@ export async function toggleUserStatus(id: number, status: string): Promise<Base
   const res = await api.put<BaseResponse<User>>(`/users/${id}/status`, { status });
   return res.data;
 }
+
+export async function getUserById(id: number): Promise<BaseResponse<User>> {
+  const res = await api.get<BaseResponse<User>>(`/users/${id}`);
+  return res.data;
+}

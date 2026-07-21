@@ -134,6 +134,14 @@ export class UserService {
 
         return { saved, oldData };
     }
+
+    async getById(id: number): Promise<User> {
+        const user = await this.userRepository.findOne({ where: { id } });
+        if (!user) {
+            throw new Error("Không tìm thấy thành viên.");
+        }
+        return user;
+    }
 }
 
 export const userService = new UserService();

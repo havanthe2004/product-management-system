@@ -3,6 +3,7 @@ import { useAppSelector } from '../store/hooks';
 import { saveCatalog, deleteCatalog, restoreCatalog } from '../services/catalog.service';
 import { useStandardData } from '../hooks/useStandardData';
 import { useSearchParams } from 'react-router-dom';
+import { useConfirm } from '../context/ConfirmContext';
 
 // Import split components
 import StandardTable from '../components/standards/StandardTable';
@@ -12,6 +13,7 @@ import StandardFilters from '../components/standards/StandardFilters';
 import Pagination from '../components/common/Pagination';
 
 export default function StandardsPage() {
+  const confirm = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTrashView, setIsTrashView] = useState(false);
   const [viewingStandard, setViewingStandard] = useState<any | null>(null);
@@ -84,6 +86,16 @@ export default function StandardsPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const isConfirmedSave = await confirm({
+      title: standardForm.id ? "Xác nhận cập nhật" : "Xác nhận thêm mới",
+      message: standardForm.id ? "Bạn có chắc chắn muốn cập nhật tiêu chuẩn này không?" : "Bạn có chắc chắn muốn thêm tiêu chuẩn mới này không?",
+      confirmText: standardForm.id ? "Cập nhật" : "Thêm mới",
+      cancelText: "Hủy",
+      type: "info"
+    });
+    if (!isConfirmedSave) return;
+
     try {
       await saveCatalog('quality-standards', standardForm);
       resetForm();
@@ -95,7 +107,14 @@ export default function StandardsPage() {
   };
 
   const handleApprove = async (s: any) => {
-    if (!confirm(`Bạn có chắc chắn muốn duyệt tiêu chuẩn "${s.standardName}"?`)) return;
+    const isConfirmedApprove = await confirm({
+      title: "Phê duyệt tiêu chuẩn",
+      message: `Bạn có chắc chắn muốn duyệt tiêu chuẩn "${s.standardName}"?`,
+      confirmText: "Phê duyệt",
+      cancelText: "Hủy",
+      type: "success"
+    });
+    if (!isConfirmedApprove) return;
     try {
       await saveCatalog('quality-standards', {
         ...s,
@@ -108,7 +127,14 @@ export default function StandardsPage() {
   };
 
   const handleReject = async (s: any) => {
-    if (!confirm(`Bạn muốn từ chối tiêu chuẩn "${s.standardName}"?`)) return;
+    const isConfirmedReject = await confirm({
+      title: "Từ chối tiêu chuẩn",
+      message: `Bạn muốn từ chối tiêu chuẩn "${s.standardName}"?`,
+      confirmText: "Từ chối",
+      cancelText: "Hủy",
+      type: "danger"
+    });
+    if (!isConfirmedReject) return;
     try {
       await saveCatalog('quality-standards', { ...s, approvalStatus: 'REJECTED' });
       fetchStandards();
@@ -118,7 +144,14 @@ export default function StandardsPage() {
   };
 
   const handleRestore = async (id: number, name: string) => {
-    if (!confirm(`Bạn có chắc muốn khôi phục tiêu chuẩn "${name}"?`)) return;
+    const isConfirmedRestore = await confirm({
+      title: "Khôi phục tiêu chuẩn",
+      message: `Bạn có chắc muốn khôi phục tiêu chuẩn "${name}"?`,
+      confirmText: "Khôi phục",
+      cancelText: "Hủy",
+      type: "success"
+    });
+    if (!isConfirmedRestore) return;
     try {
       await restoreCatalog('quality-standards', id);
       fetchStandards();
@@ -128,7 +161,14 @@ export default function StandardsPage() {
   };
 
   const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`Bạn muốn xóa tiêu chuẩn ${name}?`)) return;
+    const isConfirmedDelete = await confirm({
+      title: "Xóa tiêu chuẩn",
+      message: `Bạn muốn xóa tiêu chuẩn ${name}?`,
+      confirmText: "Xóa",
+      cancelText: "Hủy",
+      type: "danger"
+    });
+    if (!isConfirmedDelete) return;
     try {
       await deleteCatalog('quality-standards', id);
       fetchStandards();

@@ -3,6 +3,7 @@ import { useAppSelector } from '../store/hooks';
 import { saveCatalog, deleteCatalog, restoreCatalog } from '../services/catalog.service';
 import { useUnitData } from '../hooks/useUnitData';
 import { useSearchParams } from 'react-router-dom';
+import { useConfirm } from '../context/ConfirmContext';
 
 // Import split components
 import UnitTable from '../components/units/UnitTable';
@@ -12,6 +13,7 @@ import UnitFilters from '../components/units/UnitFilters';
 import Pagination from '../components/common/Pagination';
 
 export default function UnitsPage() {
+  const confirm = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTrashView, setIsTrashView] = useState(false);
   const [viewingUnit, setViewingUnit] = useState<any | null>(null);
@@ -86,6 +88,16 @@ export default function UnitsPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const isConfirmedSave = await confirm({
+      title: unitForm.id ? "Xác nhận cập nhật" : "Xác nhận thêm mới",
+      message: unitForm.id ? "Bạn có chắc chắn muốn cập nhật đơn vị tính này không?" : "Bạn có chắc chắn muốn thêm đơn vị tính mới này không?",
+      confirmText: unitForm.id ? "Cập nhật" : "Thêm mới",
+      cancelText: "Hủy",
+      type: "info"
+    });
+    if (!isConfirmedSave) return;
+
     try {
       await saveCatalog('units', unitForm);
       resetForm();
@@ -97,7 +109,14 @@ export default function UnitsPage() {
   };
 
   const handleApprove = async (u: any) => {
-    if (!confirm(`Bạn có chắc chắn muốn duyệt đơn vị tính "${u.unitName}"?`)) return;
+    const isConfirmedApprove = await confirm({
+      title: "Phê duyệt đơn vị tính",
+      message: `Bạn có chắc chắn muốn duyệt đơn vị tính "${u.unitName}"?`,
+      confirmText: "Phê duyệt",
+      cancelText: "Hủy",
+      type: "success"
+    });
+    if (!isConfirmedApprove) return;
     try {
       await saveCatalog('units', {
         ...u,
@@ -110,7 +129,14 @@ export default function UnitsPage() {
   };
 
   const handleReject = async (u: any) => {
-    if (!confirm(`Bạn muốn từ chối đơn vị tính "${u.unitName}"?`)) return;
+    const isConfirmedReject = await confirm({
+      title: "Từ chối đơn vị tính",
+      message: `Bạn muốn từ chối đơn vị tính "${u.unitName}"?`,
+      confirmText: "Từ chối",
+      cancelText: "Hủy",
+      type: "danger"
+    });
+    if (!isConfirmedReject) return;
     try {
       await saveCatalog('units', { ...u, approvalStatus: 'REJECTED' });
       fetchUnits();
@@ -120,7 +146,14 @@ export default function UnitsPage() {
   };
 
   const handleRestore = async (id: number, name: string) => {
-    if (!confirm(`Bạn có chắc muốn khôi phục đơn vị tính "${name}"?`)) return;
+    const isConfirmedRestore = await confirm({
+      title: "Khôi phục đơn vị tính",
+      message: `Bạn có chắc muốn khôi phục đơn vị tính "${name}"?`,
+      confirmText: "Khôi phục",
+      cancelText: "Hủy",
+      type: "success"
+    });
+    if (!isConfirmedRestore) return;
     try {
       await restoreCatalog('units', id);
       fetchUnits();
@@ -130,7 +163,14 @@ export default function UnitsPage() {
   };
 
   const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`Bạn muốn xóa đơn vị tính ${name}?`)) return;
+    const isConfirmedDelete = await confirm({
+      title: "Xóa đơn vị tính",
+      message: `Bạn muốn xóa đơn vị tính ${name}?`,
+      confirmText: "Xóa",
+      cancelText: "Hủy",
+      type: "danger"
+    });
+    if (!isConfirmedDelete) return;
     try {
       await deleteCatalog('units', id);
       fetchUnits();

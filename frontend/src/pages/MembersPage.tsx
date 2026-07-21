@@ -4,6 +4,7 @@ import * as userService from '../services/user.service';
 import { useMemberData } from '../hooks/useMemberData';
 import { DEFAULT_AVATAR } from '../layouts/Sidebar';
 import { useSearchParams } from 'react-router-dom';
+import { useConfirm } from '../context/ConfirmContext';
 
 // Import split components
 import MemberTable from '../components/members/MemberTable';
@@ -14,6 +15,7 @@ import Pagination from '../components/common/Pagination';
 
 export default function MembersPage() {
   const auth = useAppSelector((state) => state.auth);
+  const confirm = useConfirm();
 
   // Filter states
   const [searchQuery, setSearchQuery] = useState('');
@@ -88,6 +90,16 @@ export default function MembersPage() {
       alert("Vui lòng điền các thông tin bắt buộc!");
       return;
     }
+
+    const isConfirmed = await confirm({
+      title: "Xác nhận thêm thành viên",
+      message: "Bạn có chắc chắn muốn thêm thành viên mới này không?",
+      confirmText: "Thêm thành viên",
+      cancelText: "Hủy",
+      type: "info"
+    });
+    if (!isConfirmed) return;
+
     try {
       await userService.createUser(userForm);
 
@@ -111,7 +123,14 @@ export default function MembersPage() {
 
   // Update role
   const handleUpdateMemberRole = async (id: number, targetRole: string) => {
-    if (!confirm(`Bạn có muốn đổi quyền của thành viên này sang ${targetRole} không?`)) {
+    const isConfirmed = await confirm({
+      title: "Xác nhận đổi quyền hạn",
+      message: `Bạn có muốn đổi quyền của thành viên này sang ${targetRole} không?`,
+      confirmText: "Thay đổi",
+      cancelText: "Hủy",
+      type: "warning"
+    });
+    if (!isConfirmed) {
       fetchMembers();
       return;
     }
@@ -128,12 +147,30 @@ export default function MembersPage() {
   const handleToggleMemberStatus = async (id: number, currentStatus: string) => {
     const nextStatus = currentStatus === 'ACTIVE' ? 'LOCKED' : 'ACTIVE';
     const actionMsg = nextStatus === 'ACTIVE' ? 'mở khóa' : 'khóa';
-    if (!confirm(`Bạn có muốn ${actionMsg} tài khoản thành viên này không?`)) return;
+    const isConfirmed = await confirm({
+      title: `${nextStatus === 'ACTIVE' ? 'Mở khóa' : 'Khóa'} tài khoản`,
+      message: `Bạn có muốn ${actionMsg} tài khoản thành viên này không?`,
+      confirmText: nextStatus === 'ACTIVE' ? 'Mở khóa' : 'Khóa',
+      cancelText: "Hủy",
+      type: nextStatus === 'ACTIVE' ? 'success' : 'danger'
+    });
+    if (!isConfirmed) return;
     try {
       await userService.toggleUserStatus(id, nextStatus);
       fetchMembers();
     } catch (err: any) {
       alert('Lỗi: ' + (err.response?.data?.message || err.message));
+    }
+  };
+
+  const handleViewMemberDetails = async (member: any) => {
+    try {
+      const res = await userService.getUserById(member.id);
+      if (res.data) {
+        setViewingMember(res.data);
+      }
+    } catch (err: any) {
+      alert('Không thể tải chi tiết thành viên: ' + (err.response?.data?.message || err.message));
     }
   };
 
@@ -168,7 +205,7 @@ export default function MembersPage() {
       {/* Members table */}
       <MemberTable
         members={members}
-        onViewDetails={setViewingMember}
+        onViewDetails={handleViewMemberDetails}
         onUpdateRole={handleUpdateMemberRole}
         onToggleStatus={handleToggleMemberStatus}
         auth={auth}

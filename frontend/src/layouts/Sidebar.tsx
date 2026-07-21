@@ -1,5 +1,6 @@
 import { useAppDispatch, useAppSelector } from '../store/hooks';
 import { logout, UserRole } from '../store/slices/authSlice';
+import { useConfirm } from '../context/ConfirmContext';
 
 export const DEFAULT_AVATAR = `/image.png`;
 interface SidebarProps {
@@ -13,6 +14,7 @@ export default function Sidebar({
 }: SidebarProps) {
   const dispatch = useAppDispatch();
   const auth = useAppSelector((state) => state.auth);
+  const confirm = useConfirm();
 
   const getNavItemClass = (tab: string) => {
     return activeTab === tab ? 'sidebar-link active' : 'sidebar-link';
@@ -185,7 +187,18 @@ export default function Sidebar({
       {/* Logout Button - Fixed at bottom */}
       <div style={{ paddingTop: '16px', borderTop: '1px solid var(--border-color)', marginTop: '16px' }}>
         <button
-          onClick={() => dispatch(logout())}
+          onClick={async () => {
+            const isConfirmed = await confirm({
+              title: "Xác nhận đăng xuất",
+              message: "Bạn có chắc chắn muốn đăng xuất khỏi hệ thống không?",
+              confirmText: "Đăng xuất",
+              cancelText: "Hủy",
+              type: "warning"
+            });
+            if (isConfirmed) {
+              dispatch(logout());
+            }
+          }}
           style={{
             display: 'flex',
             alignItems: 'center',

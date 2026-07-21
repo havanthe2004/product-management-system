@@ -3,6 +3,7 @@ import { useAppSelector } from '../store/hooks';
 import { saveCatalog, deleteCatalog, restoreCatalog } from '../services/catalog.service';
 import { useCountryData } from '../hooks/useCountryData';
 import { useSearchParams } from 'react-router-dom';
+import { useConfirm } from '../context/ConfirmContext';
 
 // Import split components
 import CountryTable from '../components/countries/CountryTable';
@@ -12,6 +13,7 @@ import CountryFilters from '../components/countries/CountryFilters';
 import Pagination from '../components/common/Pagination';
 
 export default function CountriesPage() {
+  const confirm = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTrashView, setIsTrashView] = useState(false);
   const [viewingCountry, setViewingCountry] = useState<any | null>(null);
@@ -84,6 +86,16 @@ export default function CountriesPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const isConfirmedSave = await confirm({
+      title: countryForm.id ? "Xác nhận cập nhật" : "Xác nhận thêm mới",
+      message: countryForm.id ? "Bạn có chắc chắn muốn cập nhật quốc gia này không?" : "Bạn có chắc chắn muốn thêm quốc gia mới này không?",
+      confirmText: countryForm.id ? "Cập nhật" : "Thêm mới",
+      cancelText: "Hủy",
+      type: "info"
+    });
+    if (!isConfirmedSave) return;
+
     try {
       await saveCatalog('countries', countryForm);
       resetForm();
@@ -95,7 +107,14 @@ export default function CountriesPage() {
   };
 
   const handleApprove = async (c: any) => {
-    if (!confirm(`Bạn có chắc chắn muốn duyệt quốc gia "${c.countryName}"?`)) return;
+    const isConfirmedApprove = await confirm({
+      title: "Phê duyệt quốc gia",
+      message: `Bạn có chắc chắn muốn duyệt quốc gia "${c.countryName}"?`,
+      confirmText: "Phê duyệt",
+      cancelText: "Hủy",
+      type: "success"
+    });
+    if (!isConfirmedApprove) return;
     try {
       await saveCatalog('countries', {
         ...c,
@@ -108,7 +127,14 @@ export default function CountriesPage() {
   };
 
   const handleReject = async (c: any) => {
-    if (!confirm(`Bạn muốn từ chối quốc gia "${c.countryName}"?`)) return;
+    const isConfirmedReject = await confirm({
+      title: "Từ chối quốc gia",
+      message: `Bạn muốn từ chối quốc gia "${c.countryName}"?`,
+      confirmText: "Từ chối",
+      cancelText: "Hủy",
+      type: "danger"
+    });
+    if (!isConfirmedReject) return;
     try {
       await saveCatalog('countries', { ...c, approvalStatus: 'REJECTED' });
       fetchCountries();
@@ -118,7 +144,14 @@ export default function CountriesPage() {
   };
 
   const handleRestore = async (id: number, name: string) => {
-    if (!confirm(`Bạn có chắc muốn khôi phục quốc gia "${name}"?`)) return;
+    const isConfirmedRestore = await confirm({
+      title: "Khôi phục quốc gia",
+      message: `Bạn có chắc muốn khôi phục quốc gia "${name}"?`,
+      confirmText: "Khôi phục",
+      cancelText: "Hủy",
+      type: "success"
+    });
+    if (!isConfirmedRestore) return;
     try {
       await restoreCatalog('countries', id);
       fetchCountries();
@@ -128,7 +161,14 @@ export default function CountriesPage() {
   };
 
   const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`Bạn muốn xóa quốc gia ${name}?`)) return;
+    const isConfirmedDelete = await confirm({
+      title: "Xóa quốc gia đối tác",
+      message: `Bạn muốn xóa quốc gia ${name}?`,
+      confirmText: "Xóa",
+      cancelText: "Hủy",
+      type: "danger"
+    });
+    if (!isConfirmedDelete) return;
     try {
       await deleteCatalog('countries', id);
       fetchCountries();

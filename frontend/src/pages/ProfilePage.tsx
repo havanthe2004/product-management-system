@@ -4,10 +4,12 @@ import { updateUserSuccess } from '../store/slices/authSlice';
 import { getProfile, updateProfile, changePassword } from '../services/profile.service';
 import type { User } from '../types';
 import { DEFAULT_AVATAR } from '../layouts/Sidebar';
+import { useConfirm } from '../context/ConfirmContext';
 
 export default function ProfilePage() {
   const dispatch = useAppDispatch();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const confirm = useConfirm();
 
   // Sub tab state
   const [subTab, setSubTab] = useState<'info' | 'password'>('info');
@@ -138,6 +140,15 @@ export default function ProfilePage() {
       return;
     }
 
+    const isConfirmedProfile = await confirm({
+      title: "Xác nhận lưu thay đổi",
+      message: "Bạn có chắc chắn muốn lưu các thay đổi thông tin cá nhân này không?",
+      confirmText: "Lưu thay đổi",
+      cancelText: "Hủy",
+      type: "info"
+    });
+    if (!isConfirmedProfile) return;
+
     try {
       setSubmitting(true);
       const res = await updateProfile({
@@ -183,6 +194,15 @@ export default function ProfilePage() {
       showAlert('error', 'Mật khẩu mới phải có tối thiểu 6 ký tự.');
       return;
     }
+
+    const isConfirmedPassword = await confirm({
+      title: "Xác nhận đổi mật khẩu",
+      message: "Bạn có chắc chắn muốn thay đổi mật khẩu của mình không?",
+      confirmText: "Đổi mật khẩu",
+      cancelText: "Hủy",
+      type: "warning"
+    });
+    if (!isConfirmedPassword) return;
 
     try {
       setSubmitting(true);

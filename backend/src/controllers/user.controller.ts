@@ -124,6 +124,28 @@ export class UserController {
             return ResponseHelper.error(res, error.message, null, 400);
         }
     }
+
+    async getById(req: Request, res: Response): Promise<Response> {
+        try {
+            const id = Number(req.params.id);
+            const user = await userService.getById(id);
+            return ResponseHelper.success(res, {
+                id: user.id,
+                fullName: user.fullName,
+                email: user.email,
+                phone: user.phone,
+                avatar: user.avatar,
+                status: user.status,
+                role: user.role,
+                idCardNumber: user.idCardNumber,
+                dateOfBirth: user.dateOfBirth,
+                gender: user.gender,
+                createdAt: user.createdAt
+            }, "Lấy chi tiết thành viên thành công!");
+        } catch (error: any) {
+            return ResponseHelper.error(res, error.message, null, 404);
+        }
+    }
 }
 
 export const userController = new UserController();

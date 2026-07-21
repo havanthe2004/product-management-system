@@ -10,6 +10,7 @@ router.use(requireRole(["ADMIN"]));
 
 router.post("/", userController.create.bind(userController));
 router.get("/", userController.getAll.bind(userController));
+router.get("/:id", userController.getById.bind(userController));
 router.put("/:id/role", userController.updateRole.bind(userController));
 router.put("/:id/status", userController.toggleStatus.bind(userController));
 

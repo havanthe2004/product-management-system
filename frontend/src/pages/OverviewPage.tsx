@@ -72,7 +72,7 @@ export default function OverviewPage() {
         `}</style>
         {/* Banner Skeleton */}
         <div className="skeleton-pulse" style={{ height: '110px', marginBottom: '24px', width: '100%' }} />
-        
+
         {/* Cards Skeleton */}
         <div style={{
           display: 'grid',
@@ -123,9 +123,9 @@ export default function OverviewPage() {
       <div className="card" style={{ marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <div>
           <h2 style={{ fontSize: '20px', fontWeight: '700', marginBottom: '6px' }}>👋 Chào mừng quay trở lại!</h2>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
+          {/* <p style={{ color: 'var(--text-secondary)', fontSize: '14px', margin: 0 }}>
             Tất cả dữ liệu phân tích và biểu đồ dưới đây đã được **xử lý và tính toán trực tiếp từ Backend** dựa trên sản phẩm đang hoạt động.
-          </p>
+          </p> */}
         </div>
         <div style={{ fontSize: '12px', color: 'var(--text-muted)', borderLeft: '2px solid var(--border-color)', paddingLeft: '16px' }}>
           Cập nhật mới nhất: {new Date().toLocaleDateString('vi-VN')}
@@ -448,7 +448,7 @@ export default function OverviewPage() {
                 topProductsByMarkets.map((p, index) => {
                   const numCountries = p.countries?.length || 0;
                   const countryList = p.countries?.map(ct => ct.countryName).join(', ') || 'Không có';
-                  
+
                   // Rank badge colors
                   const isTop3 = index < 3;
                   const rankColors = [

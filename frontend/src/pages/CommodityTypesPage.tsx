@@ -3,6 +3,7 @@ import { useAppSelector } from '../store/hooks';
 import { saveCatalog, deleteCatalog, restoreCatalog } from '../services/catalog.service';
 import { useTypeData } from '../hooks/useTypeData';
 import { useSearchParams } from 'react-router-dom';
+import { useConfirm } from '../context/ConfirmContext';
 
 // Import split components
 import TypeTable from '../components/commodity-types/TypeTable';
@@ -12,6 +13,7 @@ import TypeFilters from '../components/commodity-types/TypeFilters';
 import Pagination from '../components/common/Pagination';
 
 export default function CommodityTypesPage() {
+  const confirm = useConfirm();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isTrashView, setIsTrashView] = useState(false);
   const [viewingType, setViewingType] = useState<any | null>(null);
@@ -89,6 +91,16 @@ export default function CommodityTypesPage() {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    const isConfirmedSave = await confirm({
+      title: typeForm.id ? "Xác nhận cập nhật" : "Xác nhận thêm mới",
+      message: typeForm.id ? "Bạn có chắc chắn muốn cập nhật loại mặt hàng này không?" : "Bạn có chắc chắn muốn thêm loại mặt hàng mới này không?",
+      confirmText: typeForm.id ? "Cập nhật" : "Thêm mới",
+      cancelText: "Hủy",
+      type: "info"
+    });
+    if (!isConfirmedSave) return;
+
     try {
       await saveCatalog('commodity-types', typeForm);
       resetForm();
@@ -100,7 +112,14 @@ export default function CommodityTypesPage() {
   };
 
   const handleApprove = async (t: any) => {
-    if (!confirm(`Bạn có chắc chắn muốn duyệt loại mặt hàng "${t.typeName}"?`)) return;
+    const isConfirmedApprove = await confirm({
+      title: "Phê duyệt loại mặt hàng",
+      message: `Bạn có chắc chắn muốn duyệt loại mặt hàng "${t.typeName}"?`,
+      confirmText: "Phê duyệt",
+      cancelText: "Hủy",
+      type: "success"
+    });
+    if (!isConfirmedApprove) return;
     try {
       await saveCatalog('commodity-types', {
         ...t,
@@ -114,7 +133,14 @@ export default function CommodityTypesPage() {
   };
 
   const handleReject = async (t: any) => {
-    if (!confirm(`Bạn muốn từ chối loại mặt hàng "${t.typeName}"?`)) return;
+    const isConfirmedReject = await confirm({
+      title: "Từ chối loại mặt hàng",
+      message: `Bạn muốn từ chối loại mặt hàng "${t.typeName}"?`,
+      confirmText: "Từ chối",
+      cancelText: "Hủy",
+      type: "danger"
+    });
+    if (!isConfirmedReject) return;
     try {
       await saveCatalog('commodity-types', {
         ...t,
@@ -128,7 +154,14 @@ export default function CommodityTypesPage() {
   };
 
   const handleRestore = async (id: number, name: string) => {
-    if (!confirm(`Bạn có chắc muốn khôi phục loại mặt hàng "${name}"?`)) return;
+    const isConfirmedRestore = await confirm({
+      title: "Khôi phục loại mặt hàng",
+      message: `Bạn có chắc muốn khôi phục loại mặt hàng "${name}"?`,
+      confirmText: "Khôi phục",
+      cancelText: "Hủy",
+      type: "success"
+    });
+    if (!isConfirmedRestore) return;
     try {
       await restoreCatalog('commodity-types', id);
       fetchTypesAndGroups();
@@ -138,7 +171,14 @@ export default function CommodityTypesPage() {
   };
 
   const handleDelete = async (id: number, name: string) => {
-    if (!confirm(`Bạn muốn xóa loại mặt hàng "${name}"?`)) return;
+    const isConfirmedDelete = await confirm({
+      title: "Xóa loại mặt hàng",
+      message: `Bạn muốn xóa loại mặt hàng "${name}"?`,
+      confirmText: "Xóa",
+      cancelText: "Hủy",
+      type: "danger"
+    });
+    if (!isConfirmedDelete) return;
     try {
       await deleteCatalog('commodity-types', id);
       fetchTypesAndGroups();
